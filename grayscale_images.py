@@ -37,7 +37,7 @@ directory_5_natural_images = r"E:\Programmierung\Datein\Python\bell_repo\Bilder_
 directory_1_gender = r"E:\Programmierung\Datein\Python\bell_repo\Bilder_Kolorierung_dataset\gender_dataset_no_color\men"
 directory_2_gender = r"E:\Programmierung\Datein\Python\bell_repo\Bilder_Kolorierung_dataset\gender_dataset_no_color\women"
 
-directory_1_fashion = r"E:\Programmierung\Datein\Python\bell_repo\Bilder_Kolorierung_dataset\fashion_dataset_no_color\fashion-dataset"
+directory_1_fashion = r"E:\Programmierung\Datein\Python\bell_repo\Bilder_Kolorierung_dataset\fashion_dataset_no_color\fashion-dataset\images"
 
 rgb_to_grayscale(directory_1_natural_images)
 rgb_to_grayscale(directory_2_natural_images)
