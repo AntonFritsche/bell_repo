@@ -2,20 +2,6 @@ import os
 import shutil
 
 def organize_images_with_images_folder_handling(no_color_datasets, color_datasets, output_dir="combined_images"):
-    """
-    Erstellt zwei Ordner, `no_color_img_comb` und `color_img_comb`, 
-    und kopiert Bilder aus den übergebenen Datensätzen in die entsprechenden Ordner.
-    Der erste Datensatz hat einen speziellen Ordner `images`, der berücksichtigt werden soll,
-    während alle anderen Unterordner rekursiv verarbeitet werden.
-
-    Args:
-        no_color_datasets (list): Liste der Pfade zu den Schwarz-Weiß-Datensätzen.
-        color_datasets (list): Liste der Pfade zu den Farbdatensätzen.
-        output_dir (str): Basisverzeichnis für die Ausgabedaten.
-        
-    Returns:
-        tuple: Pfade zu den Ordnern `no_color_img_comb` und `color_img_comb`.
-    """
     # Pfade für die kombinierten Ordner
     no_color_output = os.path.join(output_dir, "no_color_img_comb")
     color_output = os.path.join(output_dir, "color_img_comb")
