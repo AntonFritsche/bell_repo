@@ -44,20 +44,17 @@ def mask_data(no_color_path, color_path, output_dir):
                 continue  # Wenn das Bild nicht geladen werden kann, überspringen
 
             # Überprüfen, ob es sich um ein Graustufenbild handelt (1 Kanal)
-            if len(image.shape) == 2:  # Ein-Kanal-Bild (Graustufen)
-                print(f"Schwarz-Weiß-Bild gefunden: {file_name}")
-                edges = cv2.Canny(image, threshold1=50, threshold2=150)
-                # Überprüfen, ob die Kanten gut erkennbar sind
-                if edges.sum() == 0:
-                    print(f"Keine Kanten gefunden in {file_name}. Überspringe das Bild.")
-                    continue  # Wenn keine Kanten gefunden werden, überspringen
+            edges = cv2.Canny(image, threshold1=50, threshold2=150)
+            
+            # Überprüfen, ob die Kanten gut erkennbar sind
+            if edges.sum() == 0:
+                print(f"Keine Kanten gefunden in {file_name}. Überspringe das Bild.")
+                continue  # Wenn keine Kanten gefunden werden, überspringen
 
-                # Bild im entsprechenden Ordner speichern
-                output_path = os.path.join(no_color_mask_output, file_name)
-                cv2.imwrite(output_path, edges)
-                print(f"Verarbeitet und gespeichert (Schwarz-Weiß): {output_path}")
-            else:
-                print(f"Bild {file_name} ist kein Schwarz-Weiß-Bild, überspringe...")
+            # Bild im entsprechenden Ordner speichern
+            output_path = os.path.join(no_color_mask_output, file_name)
+            cv2.imwrite(output_path, edges)
+            print(f"Verarbeitet und gespeichert (Schwarz-Weiß): {output_path}")
 
     # Bilder aus dem "color"-Ordner verarbeiten (Farb-Bilder)
     print("Verarbeite Farbbilder...")
@@ -76,20 +73,17 @@ def mask_data(no_color_path, color_path, output_dir):
                 continue  # Wenn das Bild nicht geladen werden kann, überspringen
 
             # Überprüfen, ob es sich um ein Farbbild handelt (3 Kanäle)
-            if len(image.shape) == 3:  # Drei-Kanal-Bild (Farbe)
-                print(f"Farb-Bild gefunden: {file_name}")
-                edges = cv2.Canny(image, threshold1=50, threshold2=150)
-                # Überprüfen, ob die Kanten gut erkennbar sind
-                if edges.sum() == 0:
-                    print(f"Keine Kanten gefunden in {file_name}. Überspringe das Bild.")
-                    continue  # Wenn keine Kanten gefunden werden, überspringen
+            print(f"Farb-Bild gefunden: {file_name}")
+            edges = cv2.Canny(image, threshold1=50, threshold2=150)
+            # Überprüfen, ob die Kanten gut erkennbar sind
+            if edges.sum() == 0:
+                print(f"Keine Kanten gefunden in {file_name}. Überspringe das Bild.")
+                continue  # Wenn keine Kanten gefunden werden, überspringen
 
-                # Bild im entsprechenden Ordner speichern
-                output_path = os.path.join(color_mask_output, file_name)
-                cv2.imwrite(output_path, edges)
-                print(f"Verarbeitet und gespeichert (Farbe): {output_path}")
-            else:
-                print(f"Bild {file_name} ist kein Farbbild, überspringe...")
+            # Bild im entsprechenden Ordner speichern
+            output_path = os.path.join(color_mask_output, file_name)
+            cv2.imwrite(output_path, edges)
+            print(f"Verarbeitet und gespeichert (Farbe): {output_path}")
 
 
 no_color_folder = r"E:\Programmierung\Datein\Python\bell_repo\combined_images\no_color_img_comb"  # Ordner mit Schwarz-Weiß-Bildern
@@ -98,7 +92,7 @@ output_folder = r"E:\Programmierung\Datein\Python\bell_repo\combined_images"  # 
 
 mask_data(no_color_folder, color_folder, output_folder)
 
-# test_image = cv2.imread(r'E:\Programmierung\Datein\Python\bell_repo\combined_images\color_img_comb\1.jpg')
+# test_image = cv2.imread(r'E:\Programmierung\Datein\Python\bell_repo\combined_images\no_color_img_comb\1.jpg')
 # if test_image is None:
 #     print("Fehler beim Laden des Bildes!")
 # else:
