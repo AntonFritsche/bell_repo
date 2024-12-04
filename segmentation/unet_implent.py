@@ -1,3 +1,5 @@
+# tuto: https://github.com/VidushiBhatia/U-Net-Implementation/blob/main/U_Net_for_Image_Segmentation_From_Scratch_Using_TensorFlow_v4.ipynb
+
 import tensorflow as tf
 import keras
 # from tensorflow.keras.layers import Input
