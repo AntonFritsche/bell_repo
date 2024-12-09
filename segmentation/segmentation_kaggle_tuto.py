@@ -5,11 +5,11 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 from math import log2
 import tensorflow as tf
+from tensorflow.keras.optimizers import SGD
 from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.callbacks import ModelCheckpoint, CSVLogger, ReduceLROnPlateau, EarlyStopping
 from tensorflow.python.keras.models import load_model
-import keras
-from keras import layers as L
+from tensorflow.python.keras.layers import Layer as L
 from patchify import patchify
 import numpy as np
 import cv2
@@ -58,7 +58,7 @@ def deconv_block(x, num_filters, strides=2):
 def build_unetr_2d(cf):
     """ Inputs """
     input_shape = (cf["image_size"], cf["image_size"], cf["num_channels"])
-    inputs = L.Input(input_shape) ## (None, 256, 3072)
+    inputs = L.input(input_shape) ## (None, 256, 3072)
 
     """ Patch + Position Embeddings """
     patch_embed = L.Dense(cf["hidden_dim"])(inputs) ## (None, 256, 768)
@@ -183,8 +183,8 @@ if __name__ == "__main__":
 # defining the loss functions
 smooth = 1e-15
 def dice_coef(y_true, y_pred):
-    y_true = tf.keras.layers.Flatten()(y_true)
-    y_pred = tf.keras.layers.Flatten()(y_pred)
+    y_true = L.Flatten()(y_true)
+    y_pred = L.Flatten()(y_pred)
     intersection = tf.reduce_sum(y_true * y_pred)
     return (2. * intersection + smooth) / (tf.reduce_sum(y_true) + tf.reduce_sum(y_pred) + smooth)
 
@@ -308,7 +308,7 @@ if __name__ == "__main__":
     train_dataset = tf_dataset(train_x, train_y, batch=batch_size)
     valid_dataset = tf_dataset(valid_x, valid_y, batch=batch_size)
 
-    optimizer = keras.optimizers.SGD(lr)
+    optimizer = SGD(lr)
     """ Model """
     model = build_unetr_2d(cf)
     model.compile(loss=dice_loss, optimizer=optimizer, metrics=[dice_coef, "acc"])
@@ -330,8 +330,8 @@ if __name__ == "__main__":
 
 smooth = 1e-15
 def dice_coef(y_true, y_pred):
-    y_true = tf.keras.layers.Flatten()(y_true)
-    y_pred = tf.keras.layers.Flatten()(y_pred)
+    y_true = L.Flatten()(y_true)
+    y_pred = L.Flatten()(y_pred)
     intersection = tf.reduce_sum(y_true * y_pred)
     return (2. * intersection + smooth) / (tf.reduce_sum(y_true) + tf.reduce_sum(y_pred) + smooth)
 

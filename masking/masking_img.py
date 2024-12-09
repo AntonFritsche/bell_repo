@@ -1,5 +1,4 @@
 # import tensorflow as tf
-# import keras
 # from tensorflow.keras.layers import Input
 # from tensorflow.keras.layers import Conv2D
 # from tensorflow.keras.layers import MaxPooling2D
