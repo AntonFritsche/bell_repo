@@ -6,6 +6,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 from math import log2
 import tensorflow as tf
 from tensorflow.keras.optimizers import SGD
+from tf.python.keras.layers import Input 
 from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.callbacks import ModelCheckpoint, CSVLogger, ReduceLROnPlateau, EarlyStopping
 from tensorflow.python.keras.models import load_model
@@ -58,7 +59,7 @@ def deconv_block(x, num_filters, strides=2):
 def build_unetr_2d(cf):
     """ Inputs """
     input_shape = (cf["image_size"], cf["image_size"], cf["num_channels"])
-    inputs = L.input(input_shape) ## (None, 256, 3072)
+    inputs = Input(input_shape) ## (None, 256, 3072)
 
     """ Patch + Position Embeddings """
     patch_embed = L.Dense(cf["hidden_dim"])(inputs) ## (None, 256, 768)
