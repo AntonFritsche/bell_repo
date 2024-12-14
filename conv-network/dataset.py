@@ -2,6 +2,7 @@ import os
 import shutil
 import random
 from PIL import Image
+import csv
 
 def create_datasets(source_folder, dest_folder, test_size=200):
     train_folder = os.path.join(dest_folder, 'train')
@@ -47,12 +48,29 @@ def convert_images_to_grayscale(folder_path):
     for image_path in images:
         try:
             with Image.open(image_path) as img:
-                # Bild in Graustufen konvertieren
                 grayscale_img = img.convert("L")
-                # Originalbild überschreiben
                 grayscale_img.save(image_path)
         except Exception as e:
             print(f"Fehler beim Konvertieren von {image_path}: {e}")
 
 greyscale_folder = "./test"
 convert_images_to_grayscale(greyscale_folder)
+
+def create_csv_from_dataset(folder_path, csv_path):
+    with open(csv_path, mode='w', newline='') as csv_file:
+        csv_writer = csv.writer(csv_file)
+        csv_writer.writerow(["filename", "label"])
+
+        for category in os.listdir(folder_path):
+            category_path = os.path.join(folder_path, category)
+            if os.path.isdir(category_path):
+                for idx, img_name in enumerate(os.listdir(category_path)):
+                    if os.path.isfile(os.path.join(category_path, img_name)):
+                        label = category
+                        filename = f"{label}_{idx}"
+                        csv_writer.writerow([filename, label])
+
+train_csv_path = os.path.join(conv_network_folder, 'train.csv')
+test_csv_path = os.path.join(conv_network_folder, 'test.csv')
+create_csv_from_dataset(os.path.join(conv_network_folder, 'train'), train_csv_path)
+create_csv_from_dataset(os.path.join(conv_network_folder, 'test'), test_csv_path)
