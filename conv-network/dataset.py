@@ -39,7 +39,7 @@ def create_datasets(source_folder, dest_folder, test_size=200):
         shutil.copy(img, dest_category_folder)
 
 source_folder = "../Bilder_Kolorierung_dataset/natural_images_color"
-conv_network_folder = "./conv-network"
+conv_network_folder = "../conv-network"
 # create_datasets(source_folder, conv_network_folder)
 
 def convert_images_to_grayscale(folder_path):
