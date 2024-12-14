@@ -1,6 +1,7 @@
 import os
 import shutil
 import random
+from PIL import Image
 
 def create_datasets(source_folder, dest_folder, test_size=200):
     train_folder = os.path.join(dest_folder, 'train')
@@ -38,4 +39,20 @@ def create_datasets(source_folder, dest_folder, test_size=200):
 
 source_folder = "../Bilder_Kolorierung_dataset/natural_images_color"
 conv_network_folder = "./conv-network"
-create_datasets(source_folder, conv_network_folder)
+# create_datasets(source_folder, conv_network_folder)
+
+def convert_images_to_grayscale(folder_path):
+    images = [os.path.join(folder_path, img) for img in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, img))]
+
+    for image_path in images:
+        try:
+            with Image.open(image_path) as img:
+                # Bild in Graustufen konvertieren
+                grayscale_img = img.convert("L")
+                # Originalbild überschreiben
+                grayscale_img.save(image_path)
+        except Exception as e:
+            print(f"Fehler beim Konvertieren von {image_path}: {e}")
+
+greyscale_folder = "./test"
+convert_images_to_grayscale(greyscale_folder)
