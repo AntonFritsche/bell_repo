@@ -1,4 +1,5 @@
 # Conv-Network mit PyTorch
+import torch as torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
@@ -19,50 +20,76 @@ class ConvModel(nn.Module):
         self.conv3 = nn.Conv2d(in_channels=6, out_channels=8, kernel_size=self.input_shape)
 
         # convolution 4
-        self.conv3 = nn.Conv2d(in_channels=8, out_channels=16, kernel_size=self.input_shape)
+        self.conv4 = nn.Conv2d(in_channels=8, out_channels=12, kernel_size=self.input_shape)
 
         # convolution 5
-        self.conv3 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=self.input_shape)
+        self.conv5 = nn.Conv2d(in_channels=12, out_channels=24, kernel_size=self.input_shape)
 
         # convolution 6
-        self.conv3 = nn.Conv2d(in_channels=32, out_channels=24, kernel_size=self.input_shape)
+        self.conv6 = nn.Conv2d(in_channels=24, out_channels=32, kernel_size=self.input_shape)
         
-        # fully connected layer
-        self.fc1 = nn.Linear(24, 2)
+        # fully connected layer 1
+        self.fc1 = nn.Linear(in_features=32, out_features=16)
+        
+        # fully connected layer 2
+        self.fc2 = nn.Linear(in_features=16, out_features=8)
+
+        # fully connected layer 3
+        self.fc3 = nn.Linear(in_features=8, out_features=4)
+
+        # fully connected layer 4
+        self.fc4 = nn.Linear(in_features=4, out_features=2)
     
     def forward(self, x):
+        # test shape: (2, 13, 13)
+
         # convolution 1
         out = self.conv1(x)
+        print("\nconvolution 1: ", torch._shape_as_tensor(out)) # shape: (4, 11, 11)
         # sigmoid activation 1
         out = F.sigmoid(out)
 
         # convolution 2
         out = self.conv2(out)
+        print("convolution 2: ", torch._shape_as_tensor(out)) # shape: (6, 9, 9)
         # sigmoid activation 2
         out = F.sigmoid(out)
 
         # convolution 3
         out = self.conv3(out)
+        print("convolution 3: ", torch._shape_as_tensor(out)) # shape: 
         # sigmoid activation 3
         out = F.sigmoid(out)
 
         # convolution 4
-        out = self.conv3(out)
+        out = self.conv4(out)
+        print("convolution 4: ", torch._shape_as_tensor(out)) # shape: 
         # sigmoid activation 4
         out = F.sigmoid(out)
 
         # convolution 5
-        out = self.conv3(out)
+        out = self.conv5(out)
+        print("convolution 5: ", torch._shape_as_tensor(out)) # shape: 
         # sigmoid activation 5
         out = F.sigmoid(out)
 
         # convolution 6
-        out = self.conv3(out)
+        out = self.conv6(out)
+        print("convolution 6: ", torch._shape_as_tensor(out)) # shape: 
         # sigmoid activation 6
         out = F.sigmoid(out)
 
-        # fully connected layer
+        # fully connected layer 1
         out = self.fc1(out)
+
+        # fully connected layer 2
+        out = self.fc2(out)
+
+        # fully connected layer 3
+        out = self.fc3(out)
+
+        # fully connected layer 4
+        out = self.fc4(out)
 
         return out
     
