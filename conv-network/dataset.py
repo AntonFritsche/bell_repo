@@ -1,0 +1,41 @@
+import os
+import shutil
+import random
+
+def create_datasets(source_folder, dest_folder, test_size=200):
+    train_folder = os.path.join(dest_folder, 'train')
+    test_folder = os.path.join(dest_folder, 'test')
+
+    os.makedirs(train_folder, exist_ok=True)
+    os.makedirs(test_folder, exist_ok=True)
+
+    categories = [folder for folder in os.listdir(source_folder) if os.path.isdir(os.path.join(source_folder, folder))]
+
+    test_images = []
+    train_images = []
+
+    for category in categories:
+        category_path = os.path.join(source_folder, category)
+        images = [os.path.join(category_path, img) for img in os.listdir(category_path) if os.path.isfile(os.path.join(category_path, img))]
+
+        random.shuffle(images)
+
+        test_images.extend(images[:min(test_size // len(categories), len(images))])
+
+        train_images.extend(images[min(test_size // len(categories), len(images)):])
+
+    for img in test_images:
+        category_name = os.path.basename(os.path.dirname(img))
+        dest_category_folder = os.path.join(test_folder, category_name)
+        os.makedirs(dest_category_folder, exist_ok=True)
+        shutil.copy(img, dest_category_folder)
+
+    for img in train_images:
+        category_name = os.path.basename(os.path.dirname(img))
+        dest_category_folder = os.path.join(train_folder, category_name)
+        os.makedirs(dest_category_folder, exist_ok=True)
+        shutil.copy(img, dest_category_folder)
+
+source_folder = "../Bilder_Kolorierung_dataset/natural_images_color"
+conv_network_folder = "./conv-network"
+create_datasets(source_folder, conv_network_folder)
