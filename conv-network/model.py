@@ -57,38 +57,36 @@ class ConvModel(nn.Module):
 
         # convolution 3
         out = self.conv3(out)
-        print("convolution 3: ", torch._shape_as_tensor(out)) # shape: 
+        print("convolution 3: ", torch._shape_as_tensor(out)) # shape: (8, 7, 7)
         # sigmoid activation 3
         out = F.sigmoid(out)
 
         # convolution 4
         out = self.conv4(out)
-        print("convolution 4: ", torch._shape_as_tensor(out)) # shape: 
+        print("convolution 4: ", torch._shape_as_tensor(out)) # shape: (12, 5, 5)
         # sigmoid activation 4
         out = F.sigmoid(out)
 
         # convolution 5
         out = self.conv5(out)
-        print("convolution 5: ", torch._shape_as_tensor(out)) # shape: 
+        print("convolution 5: ", torch._shape_as_tensor(out)) # shape: (24, 3, 3)
         # sigmoid activation 5
         out = F.sigmoid(out)
 
         # convolution 6
         out = self.conv6(out)
-        print("convolution 6: ", torch._shape_as_tensor(out)) # shape: 
+        print("convolution 6: ", torch._shape_as_tensor(out)) # shape: (32, 1 1)
         # sigmoid activation 6
         out = F.sigmoid(out)
 
-        # fully connected layer 1
+        # Flatten the output from conv layers
+        out = torch.flatten(out, 1) # Flatten from [(batch_size,) 32, 1, 1] to [(batch_size,) 32, 1]
+        out = torch.flatten(out, 0) # Flatten from [(batch_size,) 32, 1] to [(batch_size,) 32] 
+
+        # fully connected layers
         out = self.fc1(out)
-
-        # fully connected layer 2
         out = self.fc2(out)
-
-        # fully connected layer 3
         out = self.fc3(out)
-
-        # fully connected layer 4
         out = self.fc4(out)
 
         return out
