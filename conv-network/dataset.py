@@ -97,5 +97,5 @@ def resize_images(folder_path, size=(500, 500)):
 
 train_folder = "./train"
 test_folder = "./test"
-resize_images_in_place(train_folder)
-resize_images_in_place(test_folder)
+resize_images(train_folder)
+resize_images(test_folder)
