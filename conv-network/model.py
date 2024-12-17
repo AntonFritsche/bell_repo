@@ -4,29 +4,36 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import pandas as pd
+import cv2
 
 class ConvModel(nn.Module):
     def __init__(self) -> None:
         super(ConvModel, self).__init__()
-        self.input_shape = 3 # -> 6 conv layers 
+        self.filter_size = 3 # -> 6 conv layers
+        
+        def preprocess_image(self, input_image):
+            
+            image = cv2.imread(input_image)
+            image_lab = cv2.COLOR_RGB2Lab(image)
+            return image_lab
         
         # convolution 1
-        self.conv1 = nn.Conv2d(in_channels=2, out_channels=4, kernel_size=self.input_shape)
+        self.conv1 = nn.Conv2d(in_channels=2, out_channels=4, kernel_size=self.filter_size)
 
         # convolution 2
-        self.conv2 = nn.Conv2d(in_channels=4, out_channels=6, kernel_size=self.input_shape)
+        self.conv2 = nn.Conv2d(in_channels=4, out_channels=6, kernel_size=self.filter_size)
 
         # convolution 3
-        self.conv3 = nn.Conv2d(in_channels=6, out_channels=8, kernel_size=self.input_shape)
+        self.conv3 = nn.Conv2d(in_channels=6, out_channels=8, kernel_size=self.filter_size)
 
         # convolution 4
-        self.conv4 = nn.Conv2d(in_channels=8, out_channels=12, kernel_size=self.input_shape)
+        self.conv4 = nn.Conv2d(in_channels=8, out_channels=12, kernel_size=self.filter_size)
 
         # convolution 5
-        self.conv5 = nn.Conv2d(in_channels=12, out_channels=24, kernel_size=self.input_shape)
+        self.conv5 = nn.Conv2d(in_channels=12, out_channels=24, kernel_size=self.filter_size)
 
         # convolution 6
-        self.conv6 = nn.Conv2d(in_channels=24, out_channels=32, kernel_size=self.input_shape)
+        self.conv6 = nn.Conv2d(in_channels=24, out_channels=32, kernel_size=self.filter_size)
         
         # fully connected layer 1
         self.fc1 = nn.Linear(in_features=32, out_features=16)
