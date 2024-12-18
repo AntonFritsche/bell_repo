@@ -11,12 +11,6 @@ class ConvModel(nn.Module):
         super(ConvModel, self).__init__()
         self.filter_size = 3 # -> 6 conv layers
         
-        def preprocess_image(self, input_image):
-            
-            image = cv2.imread(input_image)
-            image_lab = cv2.COLOR_RGB2Lab(image)
-            return image_lab
-        
         # convolution 1
         self.conv1 = nn.Conv2d(in_channels=2, out_channels=4, kernel_size=self.filter_size)
 
@@ -47,8 +41,19 @@ class ConvModel(nn.Module):
         # fully connected layer 4
         self.fc4 = nn.Linear(in_features=4, out_features=2)
     
+    def preprocess_image(self, input_image):
+        image = cv2.imread(input_image)
+        image_lab = cv2.COLOR_RGB2Lab(image)
+
+        [L A B] = imsplit(image_lab)
+
+
+        return image_lab
+
     def forward(self, x):
         # test shape: (2, 13, 13)
+
+        out = self.preprocess_image(x) 
 
         # convolution 1
         out = self.conv1(x)
