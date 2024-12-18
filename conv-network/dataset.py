@@ -3,6 +3,8 @@ import shutil
 import random
 from PIL import Image
 import csv
+import re
+import cv2
 
 def create_datasets(source_folder, dest_folder, test_size=200):
     train_folder = os.path.join(dest_folder, 'train')
@@ -54,7 +56,7 @@ def convert_images_to_grayscale(folder_path):
             print(f"Fehler beim Konvertieren von {image_path}: {e}")
 
 greyscale_folder = "./test"
-convert_images_to_grayscale(greyscale_folder)
+# convert_images_to_grayscale(greyscale_folder)
 
 def create_csv_from_dataset(folder_path, csv_path):
     with open(csv_path, mode='w', newline='') as csv_file:
@@ -72,5 +74,122 @@ def create_csv_from_dataset(folder_path, csv_path):
 
 train_csv_path = os.path.join(conv_network_folder, 'train.csv')
 test_csv_path = os.path.join(conv_network_folder, 'test.csv')
-create_csv_from_dataset(os.path.join(conv_network_folder, 'train'), train_csv_path)
-create_csv_from_dataset(os.path.join(conv_network_folder, 'test'), test_csv_path)
+# create_csv_from_dataset(os.path.join(conv_network_folder, 'train'), train_csv_path)
+# create_csv_from_dataset(os.path.join(conv_network_folder, 'test'), test_csv_path)
+
+def resize_images(folder_path, size=(500, 500)):
+    images = [os.path.join(folder_path, img) for img in os.listdir(folder_path) 
+              if os.path.isfile(os.path.join(folder_path, img))]
+
+    for image_path in images:
+        try:
+            with Image.open(image_path) as img:
+                filename = os.path.basename(image_path)
+                cleared_filename = re.sub(r'[^a-zA-Z0-9]', '', filename.split('.')[0])  # Unerwünschte Zeichen entfernen
+                
+                resized_image = img.resize(size)
+                
+                save_path = os.path.join(folder_path, f"{cleared_filename}.jpg")
+                resized_image.save(save_path)
+                print(f"Bild resized und gespeichert: {save_path}")
+        except Exception as e:
+            print(f"Fehler beim Resizen von {image_path}: {e}")
+
+train_folder = "./train"
+test_folder = "./test"
+# resize_images(train_folder)
+# resize_images(test_folder)
+
+def rename_images(folder_path, folder_name):
+    counter = 1
+    
+    images = [os.path.join(folder_path, img) for img in os.listdir(folder_path) 
+              if os.path.isfile(os.path.join(folder_path, img))]
+
+    for image_path in images:
+        try:
+            with Image.open(image_path) as img:
+                if folder_name == "train":
+                    filename = os.path.basename(image_path)
+
+                    clean_name = re.sub(r'\d+_', '', filename).lower()
+
+                    if clean_name.startswith("car"):
+                        image_name = f"car_{counter}"
+                    elif clean_name.startswith("flower"):
+                        image_name = f"flower_{counter}"
+                    elif clean_name.startswith("dog"):
+                        image_name = f"dog_{counter}"
+                    elif clean_name.startswith("cat"):
+                        image_name = f"cat_{counter}"
+                    else:
+                        image_name = f"unknown_{counter}"
+
+                    save_path = os.path.join(folder_path, f"{image_name}.jpg")
+                    img.save(save_path)
+                    print(f"Bild umbenannt und gespeichert: {save_path}")
+                    counter += 1
+                elif folder_name == "test":
+                    filename = os.path.basename(image_path)
+
+                    clean_name = re.sub(r'\d+', '', filename).lower()
+
+                    if clean_name.startswith("car"):
+                        image_name = f"car_{counter}"
+                    elif clean_name.startswith("flower"):
+                        image_name = f"flower_{counter}"
+                    elif clean_name.startswith("dog"):
+                        image_name = f"dog_{counter}"
+                    elif clean_name.startswith("cat"):
+                        image_name = f"cat_{counter}"
+                    elif clean_name.startswith("airplane"):
+                        image_name = f"airplane_{counter}"
+                    else:
+                        image_name = f"unknown_{counter}"
+
+                    save_path = os.path.join(folder_path, f"{image_name}.jpg")
+                    img.save(save_path)
+                    print(f"Bild umbenannt und gespeichert: {save_path}")
+                    counter += 1
+                else:
+                    return print("Error: wrong folder name")
+        except Exception as e:
+            print(f"Fehler beim Bearbeiten von {image_path}: {e}")
+
+image_train_folder = "./train"
+image_test_folder = "./test"
+# rename_images(image_train_folder, "train")
+# rename_images(image_test_folder, "test")
+
+def resize_images_in_folders(base_folder):
+    target_size = (500, 500)
+    folders = ['train', 'test']
+
+    for folder in folders:
+        folder_path = os.path.join(base_folder, folder)
+        if not os.path.exists(folder_path):
+            print(f"Ordner nicht gefunden: {folder_path}")
+            continue
+
+        print(f"\n--- Bearbeite Bilder im Ordner: {folder} ---")
+        images = [os.path.join(folder_path, img) for img in os.listdir(folder_path) 
+                  if os.path.isfile(os.path.join(folder_path, img))]
+
+        for image_path in images:
+            try:
+                with Image.open(image_path) as img:
+                    print(f"Bild: {os.path.basename(image_path)}, Größe: {img.size}")
+
+                    if img.size != target_size:
+                        img_resized = img.resize(target_size, Image.ANTIALIAS)
+
+                        img_resized.save(image_path)
+                        print(f"Bild resized und gespeichert: {os.path.basename(image_path)}")
+                    else:
+                        print(f"Bild hat bereits die richtige Größe: {os.path.basename(image_path)}")
+
+            except Exception as e:
+                print(f"Fehler beim Bearbeiten von {image_path}: {e}")
+
+base_foler_path = "E:/Programmierung/Datein/Python/bell_repo/conv-network"
+resize_images_in_folders(base_foler_path)
