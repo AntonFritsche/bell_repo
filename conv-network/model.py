@@ -114,11 +114,18 @@ class ConvModel(nn.Module):
         out = torch.flatten(out, 1) # Flatten from [(batch_size,) 32, 1, 1] to [(batch_size,) 32, 1]
         out = torch.flatten(out, 0) # Flatten from [(batch_size,) 32, 1] to [(batch_size,) 32] 
 
-        # fully connected layers
+        # fully connected layers with sigmoid activations
         out = self.fc1(out)
+        out = F.sigmoid(out)
+
         out = self.fc2(out)
+        out = F.sigmoid(out)
+
         out = self.fc3(out)
+        out = F.sigmoid(out)
+
         out = self.fc4(out)
+        out = F.sigmoid(out)
 
         return out
     
