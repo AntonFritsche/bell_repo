@@ -5,8 +5,9 @@ from torch.utils.data import DataLoader
 import numpy as np
 import pandas as pd
 import model
+import cv2
 
-# instantate the convolution model
+#instantate the convolution model
 conv_model = model.ConvModel()
 print(conv_model)
 
@@ -21,4 +22,5 @@ print("output_size: ", params[0].size())
 
 x = torch.randn(size=(2, 13, 13))
 print("x: ", conv_model(x))
+
 

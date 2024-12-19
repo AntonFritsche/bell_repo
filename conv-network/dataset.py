@@ -99,6 +99,7 @@ train_folder = "./train"
 test_folder = "./test"
 # resize_images(train_folder)
 # resize_images(test_folder)
+# resize_images("../conv-network")
 
 def rename_images(folder_path, folder_name):
     counter = 1
@@ -192,4 +193,4 @@ def resize_images_in_folders(base_folder):
                 print(f"Fehler beim Bearbeiten von {image_path}: {e}")
 
 base_foler_path = "E:/Programmierung/Datein/Python/bell_repo/conv-network"
-resize_images_in_folders(base_foler_path)
+# resize_images_in_folders(base_foler_path)
