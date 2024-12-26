@@ -49,9 +49,9 @@ class ABSectionDataset(Dataset):
     def __getitem__(self, idx):
         row = self.data.iloc[idx]
         image_name = row['filename']
-        section_id = row['Abschnitt_ID']
-        a_value = row['A-Wert']
-        b_value = row['B-Wert']
+        section_id = row['section_id']
+        a_value = row['label_a']
+        b_value = row['label_b']
 
         image_path = os.path.join(self.image_dir, image_name)
         image = Image.open(image_path).convert("RGB")
@@ -79,7 +79,7 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
 ])
 
-csv_path = "train.csv"
+csv_path = "train_with_section_ids.csv"
 data = pd.read_csv(csv_path)
 
 image_dir = "train/"
@@ -151,7 +151,7 @@ def validate_model(val_loader):
     model.train()
     return val_loss
 
-num_epochs = 100
+num_epochs = 5
 
 for epoch in range(num_epochs):
     print(f'Epoch {epoch + 1}/{num_epochs}')
