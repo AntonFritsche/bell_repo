@@ -284,6 +284,7 @@ def add_section_id_to_csv(csv_file, output_csv_file):
         for _ in image_data.itertuples():
             section_ids.append(section_id)
             section_id += 1
+        section_id = 0
     
     data['section_id'] = section_ids
     
@@ -295,6 +296,5 @@ csv_file_test = 'test.csv'
 output_csv_file_train = 'train_with_section_ids.csv'
 output_csv_file_test = 'test_with_section_ids.csv'
 
-# Funktion aufrufen
-# add_section_id_to_csv(csv_file_train, output_csv_file_train)
+add_section_id_to_csv(csv_file_train, output_csv_file_train)
 # add_section_id_to_csv(csv_file_test, output_csv_file_test)

@@ -27,14 +27,14 @@ total_params = sum(
 print("total parameters: ", total_params)
 print("output_size: ", params[0].size())
 
-x = torch.randn(size=(1, 13, 13))
+x = torch.randn(size=(1, 3, 13, 13))
 print("x: ", conv_model(x))
 
 # Loss function
 loss_fn = nn.L1Loss()
 
 # Optimizers specified in the torch.optim package
-optimizer = torch.optim.SGD(conv_model.parameters(), lr=0.001, momentum=0.9)
+optimizer = torch.optim.Adam(conv_model.parameters(), lr=0.001)
 
 class ABSectionDataset(Dataset):
     def __init__(self, csv_file, image_dir, section_size=13, transform=None):
@@ -94,8 +94,8 @@ val_size = len(subset) - train_size
 
 train_dataset, val_dataset = random_split(subset, [train_size, val_size])
 
-train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False)
 
 def train_one_epoch(epoch_index, tb_writer):
     running_loss = 0.0
@@ -105,14 +105,17 @@ def train_one_epoch(epoch_index, tb_writer):
         inputs, labels = data
 
         optimizer.zero_grad()
-
-        outputs = model(inputs)
+        
+        global device 
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        inputs = inputs.to(device)
+        outputs = conv_model(inputs)
 
         loss = loss_fn(outputs, labels)
         loss.backward()
 
         optimizer.step()
-
+        
         running_loss += loss.item()
 
         if i % 1000 == 999:
@@ -128,19 +131,20 @@ def train_one_epoch(epoch_index, tb_writer):
     return last_loss, val_loss
 
 def validate_model(val_loader):
-    model.eval()
+    conv_model.eval()
     val_loss = 0.0
     correct = 0
     total = 0
     
     with torch.no_grad():
         for inputs, labels in val_loader:
-            outputs = model(inputs)
+            inputs, labels = inputs.to(device), labels.to(device)
+            outputs = conv_model(inputs)
 
             loss = loss_fn(outputs, labels)
             val_loss += loss.item()
 
-            predicted = torch.argmax(outputs, dim=1)
+            predicted = torch.argmax(outputs, dim=0)
             correct += (predicted == labels).sum().item()
             total += labels.size(0)
 
@@ -148,10 +152,10 @@ def validate_model(val_loader):
     accuracy = 100 * correct / total
 
     print(f'Validation Loss: {val_loss:.4f}, Accuracy: {accuracy:.2f}%')
-    model.train()
+    conv_model.train()
     return val_loss
 
-num_epochs = 5
+num_epochs = 100
 
 for epoch in range(num_epochs):
     print(f'Epoch {epoch + 1}/{num_epochs}')

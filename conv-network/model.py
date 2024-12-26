@@ -12,7 +12,7 @@ class ConvModel(nn.Module):
         self.filter_size = 3 # -> 6 conv layers
         
         # convolution 1
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=4, kernel_size=self.filter_size)
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=4, kernel_size=self.filter_size)
 
         # convolution 2
         self.conv2 = nn.Conv2d(in_channels=4, out_channels=6, kernel_size=self.filter_size)
@@ -46,37 +46,37 @@ class ConvModel(nn.Module):
 
         # convolution 1
         out = self.conv1(x)
-        print("\nconvolution 1: ", torch._shape_as_tensor(out)) # shape: (4, 11, 11)
+        # print("\nconvolution 1: ", torch._shape_as_tensor(out)) # shape: (4, 11, 11)
         # sigmoid activation 1
         out = F.sigmoid(out)
 
         # convolution 2
         out = self.conv2(out)
-        print("convolution 2: ", torch._shape_as_tensor(out)) # shape: (6, 9, 9)
+        # print("convolution 2: ", torch._shape_as_tensor(out)) # shape: (6, 9, 9)
         # sigmoid activation 2
         out = F.sigmoid(out)
 
         # convolution 3
         out = self.conv3(out)
-        print("convolution 3: ", torch._shape_as_tensor(out)) # shape: (8, 7, 7)
+        # print("convolution 3: ", torch._shape_as_tensor(out)) # shape: (8, 7, 7)
         # sigmoid activation 3
         out = F.sigmoid(out)
 
         # convolution 4
         out = self.conv4(out)
-        print("convolution 4: ", torch._shape_as_tensor(out)) # shape: (12, 5, 5)
+        # print("convolution 4: ", torch._shape_as_tensor(out)) # shape: (12, 5, 5)
         # sigmoid activation 4
         out = F.sigmoid(out)
 
         # convolution 5
         out = self.conv5(out)
-        print("convolution 5: ", torch._shape_as_tensor(out)) # shape: (24, 3, 3)
+        # print("convolution 5: ", torch._shape_as_tensor(out)) # shape: (24, 3, 3)
         # sigmoid activation 5
         out = F.sigmoid(out)
 
         # convolution 6
         out = self.conv6(out)
-        print("convolution 6: ", torch._shape_as_tensor(out)) # shape: (32, 1 1)
+        # print("convolution 6: ", torch._shape_as_tensor(out)) # shape: (32, 1 1)
         # sigmoid activation 6
         out = F.sigmoid(out)
 
