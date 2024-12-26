@@ -296,5 +296,5 @@ output_csv_file_train = 'train_with_section_ids.csv'
 output_csv_file_test = 'test_with_section_ids.csv'
 
 # Funktion aufrufen
-add_section_id_to_csv(csv_file_train, output_csv_file_train)
-add_section_id_to_csv(csv_file_test, output_csv_file_test)
+# add_section_id_to_csv(csv_file_train, output_csv_file_train)
+# add_section_id_to_csv(csv_file_test, output_csv_file_test)
