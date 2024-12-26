@@ -10,11 +10,9 @@ class ConvModel(nn.Module):
     def __init__(self) -> None:
         super(ConvModel, self).__init__()
         self.filter_size = 3 # -> 6 conv layers
-        self.space_size = 13
-        self.overlap = 1
         
         # convolution 1
-        self.conv1 = nn.Conv2d(in_channels=2, out_channels=4, kernel_size=self.filter_size)
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=4, kernel_size=self.filter_size)
 
         # convolution 2
         self.conv2 = nn.Conv2d(in_channels=4, out_channels=6, kernel_size=self.filter_size)
@@ -43,36 +41,8 @@ class ConvModel(nn.Module):
         # fully connected layer 4
         self.fc4 = nn.Linear(in_features=4, out_features=2)
     
-    def preprocess_image(self, input_image):
-        image = cv2.imread(input_image)
-        if image is None:
-            raise ValueError(f"Image at path '{input_image}' could not be read.")
-        
-        image_lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
-        
-        img_height, img_width, _ = image_lab.shape
-        print(image_lab.shape)
-        
-        L, A, B = cv2.split(image_lab)
-        
-        image_spaces = []
-        
-        step = self.section_size - self.overlap
-        
-        for y in range(0, img_height, step):
-            for x in range(0, img_width, step):
-                x_end = min(x + self.section_size, img_width)
-                y_end = min(y + self.section_size, img_height)
-                
-                section = image_lab[y:y_end, x:x_end]
-                image_spaces.append(section)
-        
-        return image_spaces
-
     def forward(self, x):
-        # test shape: (2, 13, 13)
-
-        out = self.preprocess_image(x) 
+        # test shape: (1, 13, 13)
 
         # convolution 1
         out = self.conv1(x)
@@ -127,5 +97,5 @@ class ConvModel(nn.Module):
         out = self.fc4(out)
         out = F.sigmoid(out)
 
-        return out
+        return out # (B, 2) --> A und B Farbchannel
     

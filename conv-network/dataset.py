@@ -5,6 +5,7 @@ from PIL import Image
 import csv
 import re
 import cv2
+import pandas as pd
 
 def create_datasets(source_folder, dest_folder, test_size=200):
     train_folder = os.path.join(dest_folder, 'train')
@@ -194,3 +195,106 @@ def resize_images_in_folders(base_folder):
 
 base_foler_path = "E:/Programmierung/Datein/Python/bell_repo/conv-network"
 # resize_images_in_folders(base_foler_path)
+
+def rename_images_in_folder(folder_path):
+    image_extensions = {".jpg", ".jpeg", ".png", ".bmp"}
+
+    files = [f for f in os.listdir(folder_path) if os.path.splitext(f)[1].lower() in image_extensions]
+
+    files.sort()
+
+    for index, file_name in enumerate(files):
+        old_path = os.path.join(folder_path, file_name)
+        new_name = f"{index}{os.path.splitext(file_name)[1].lower()}"
+        new_path = os.path.join(folder_path, new_name)
+        os.rename(old_path, new_path)
+
+    print(f"Renamed {len(files)} files in folder: {folder_path}")
+
+def rename_images_in_train_and_test():
+    for folder in ["train", "test"]:
+        if os.path.exists(folder):
+            rename_images_in_folder(folder)
+        else:
+            print(f"Folder not found: {folder}")
+
+# rename_images_in_train_and_test()
+
+
+def preprocess_image(input_image, section_size=13, overlap=1):
+    image = cv2.imread(input_image)
+    if image is None:
+        raise ValueError(f"Image at path '{input_image}' could not be read.")
+    
+    image_lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
+    img_height, img_width, _ = image_lab.shape
+    
+    step = section_size - overlap
+    central_pixels = []
+
+    for y in range(0, img_height, step):
+        for x in range(0, img_width, step):
+            x_end = min(x + section_size, img_width)
+            y_end = min(y + section_size, img_height)
+            
+            section = image_lab[y:y_end, x:x_end]
+            
+            center_y = (y_end - y) // 2
+            center_x = (x_end - x) // 2
+            
+            _, a_value, b_value = section[center_y, center_x]
+            central_pixels.append([a_value, b_value])
+
+    return central_pixels
+
+def process_all_images(image_dir, csv_path, section_size=13, overlap=1):
+    with open(csv_path, mode='a', newline='') as csv_file:
+        csv_writer = csv.writer(csv_file)
+        
+        for image_name in os.listdir(image_dir):
+            if image_name.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
+                image_path = os.path.join(image_dir, image_name)
+                
+                try:
+                    central_pixels = preprocess_image(image_path, section_size, overlap)
+                    
+                    for pixel in central_pixels:
+                        csv_writer.writerow([image_name] + pixel)
+                except Exception as e:
+                    print(f"Error processing {image_path}: {e}")
+
+image_directory_train = "train/"
+image_directory_test = "test/"
+csv_file_path_train = "train.csv"
+csv_file_path_test = "test.csv"
+
+# process_all_images(image_directory_train, csv_file_path_train)
+# process_all_images(image_directory_test, csv_file_path_test)
+
+def add_section_id_to_csv(csv_file, output_csv_file):
+    data = pd.read_csv(csv_file)
+    
+    section_id = 0
+    
+    section_ids = []
+    
+    for filename in data['filename'].unique():
+        image_data = data[data['filename'] == filename]
+        
+        for _ in image_data.itertuples():
+            section_ids.append(section_id)
+            section_id += 1
+    
+    data['section_id'] = section_ids
+    
+    data.to_csv(output_csv_file, index=False)
+    print(f"Section IDs wurden hinzugefügt. Neue CSV gespeichert als: {output_csv_file}")
+
+csv_file_train = 'train.csv'
+csv_file_test = 'test.csv'
+output_csv_file_train = 'train_with_section_ids.csv'
+output_csv_file_test = 'test_with_section_ids.csv'
+
+# Funktion aufrufen
+add_section_id_to_csv(csv_file_train, output_csv_file_train)
+add_section_id_to_csv(csv_file_test, output_csv_file_test)
