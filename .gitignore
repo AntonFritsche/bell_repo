@@ -3,3 +3,7 @@ combined_images/
 datasets/
 test/
 train/
+test.csv
+train.csv
+test_with_section_ids.csv
+train_with_section_ids.csv
