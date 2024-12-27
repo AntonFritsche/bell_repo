@@ -79,10 +79,10 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
 ])
 
-csv_path = "train_with_section_ids.csv"
+csv_path = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train_with_section_ids.csv"
 data = pd.read_csv(csv_path)
 
-image_dir = "train/"
+image_dir = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train"
 
 dataset = ABSectionDataset(csv_file=csv_path, image_dir=image_dir, section_size=13, transform=transform)
 
