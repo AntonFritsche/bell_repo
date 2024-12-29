@@ -25,10 +25,11 @@ total_params = sum(
     param.numel() for param in conv_model.parameters()
 )
 print("total parameters: ", total_params)
-print("output_size: ", params[0].size())
+print("output_size: ", params[0].size(), "\n")
 
-x = torch.randn(size=(1, 3, 13, 13))
-print("x: ", conv_model(x))
+# test input for network
+# x = torch.randn(size=(1, 3, 13, 13))
+# print("x: ", conv_model(x))
 
 # Loss function
 loss_fn = nn.L1Loss()
@@ -48,15 +49,20 @@ class ABSectionDataset(Dataset):
 
     def __getitem__(self, idx):
         row = self.data.iloc[idx]
-        image_name = row['filename']
-        section_id = row['section_id']
-        a_value = row['label_a']
-        b_value = row['label_b']
+
+        image_name = row['filename'] # name of file
+
+        section_id = row['section_id'] # number of the section: 1763 sections per image (500x500 pixels)
+
+        a_value = row['label_a'] # a value from central pixel of section
+        b_value = row['label_b'] # b value from central pixel of section
 
         image_path = os.path.join(self.image_dir, image_name)
         image = Image.open(image_path).convert("RGB")
 
         num_sections = int(image.size[0] // self.section_size)
+        # print("num_sections: ", num_sections)
+        
         row_idx = section_id // num_sections
         col_idx = section_id % num_sections
 
@@ -64,12 +70,13 @@ class ABSectionDataset(Dataset):
         upper = row_idx * self.section_size
         right = left + self.section_size
         lower = upper + self.section_size
-        section = image.crop((left, upper, right, lower))
+
+        section = image.crop((left, upper, right, lower)) # cut section out of image
 
         if self.transform:
             section = self.transform(section)
 
-        ab_values = torch.tensor([a_value, b_value], dtype=torch.float32)
+        ab_values = torch.tensor([a_value, b_value], dtype=torch.float32) # tuple with a and b values from coloured image
 
         return section, ab_values
 
@@ -86,10 +93,12 @@ image_dir = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train"
 
 dataset = ABSectionDataset(csv_file=csv_path, image_dir=image_dir, section_size=13, transform=transform)
 
-subset_indices = list(range(1000))  # Indexliste für die ersten 1000
+print(dataset)
+
+subset_indices = list(range(1000))
 subset = Subset(dataset, subset_indices)
 
-train_size = int(0.8 * len(subset))
+train_size = int(0.9 * len(subset))
 val_size = len(subset) - train_size
 
 train_dataset, val_dataset = random_split(subset, [train_size, val_size])
@@ -103,15 +112,17 @@ def train_one_epoch(epoch_index, tb_writer):
 
     for i, data in enumerate(train_loader):
         inputs, labels = data
+        print("inputs: ", inputs)
+        print("labels: ", labels)
 
         optimizer.zero_grad()
         
-        global device 
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        inputs = inputs.to(device)
+        # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        inputs = inputs.to("cpu")
         outputs = conv_model(inputs)
 
         loss = loss_fn(outputs, labels)
+        loss = torch.tensor(loss, requires_grad=True)
         loss.backward()
 
         optimizer.step()
@@ -138,7 +149,7 @@ def validate_model(val_loader):
     
     with torch.no_grad():
         for inputs, labels in val_loader:
-            inputs, labels = inputs.to(device), labels.to(device)
+            inputs, labels = inputs.to("cpu"), labels.to("cpu")
             outputs = conv_model(inputs)
 
             loss = loss_fn(outputs, labels)
