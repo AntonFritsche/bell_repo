@@ -228,24 +228,21 @@ def preprocess_image(input_image, section_size=13, overlap=1):
     
     image_lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
     img_height, img_width, _ = image_lab.shape
+
+    output_ordner = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train"
+    section_count = 0
     
-    step = section_size - overlap
-    central_pixels = []
+    for y in range(img_height - section_size + 1):  # height
+        for x in range(img_width - section_size + 1):  # width
+            # cuttin the section out of the image
+            sektion = image[y:y + section_size, x:x + section_size]
+            
+            # safe section
+            cv2.imwrite(f"{output_ordner}/sektion_{x}_{y}.png", sektion)
+            print(f"Saved section: {output_ordner}/sektion_{x}_{y}.jpf")
+            section_count += 1
 
-    for y in range(0, img_height, step):
-        for x in range(0, img_width, step):
-            x_end = min(x + section_size, img_width)
-            y_end = min(y + section_size, img_height)
-            
-            section = image_lab[y:y_end, x:x_end]
-            
-            center_y = (y_end - y) // 2
-            center_x = (x_end - x) // 2
-            
-            _, a_value, b_value = section[center_y, center_x]
-            central_pixels.append([a_value, b_value])
-
-    return central_pixels
+# preprocess_image("1.png")
 
 def process_all_images(image_dir, csv_path, section_size=13, overlap=1):
     with open(csv_path, mode='a', newline='') as csv_file:
@@ -298,3 +295,36 @@ output_csv_file_test = 'test_with_section_ids.csv'
 
 # add_section_id_to_csv(csv_file_train, output_csv_file_train)
 # add_section_id_to_csv(csv_file_test, output_csv_file_test)
+
+# img = Image.open("train_image.png")
+# target_size = (500, 500)
+
+# img_resized = img.resize(target_size)
+# img_resized.save(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\1.png")
+
+def create_csv_train(csv_path, train_dir, output_csv_file):
+    data = pd.read_csv(csv_path)
+    
+    counter = 0
+    for image_name in os.listdir(train_dir):
+        image_path = os.path.join(train_dir, image_name)
+
+        image = cv2.imread(image_path)
+
+        # central_pixel = image[6, 6]
+        
+        L, A, B = cv2.split(image)
+
+        a_central = A[6, 6]
+        b_central = B[6, 6]
+
+        new_row = pd.DataFrame({"section_id": [counter], "label_a": [a_central], "label_b": [b_central]})
+        df = pd.concat([data, new_row], ignore_index=True)
+        print("Added new row with central pixel a and b values: ", counter)
+        counter += 1
+
+    data.to_csv(output_csv_file, index=False)
+    print(f"Neue CSV gespeichert als: {output_csv_file}")
+
+create_csv_train(r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train_empty.csv", r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train", r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train.csv")
+
