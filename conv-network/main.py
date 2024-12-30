@@ -13,6 +13,7 @@ import model
 import cv2
 import os
 import datetime
+from torchvision.io import read_image
 
 #instantate the convolution model
 conv_model = model.ConvModel()
@@ -37,48 +38,36 @@ loss_fn = nn.L1Loss()
 # Optimizers specified in the torch.optim package
 optimizer = torch.optim.Adam(conv_model.parameters(), lr=0.001)
 
+def target_transform(label):
+    label_tensor = torch.tensor(label, dtype=torch.float)
+    
+    normalized_label = label_tensor / 128.0  # scaling by factor of 128
+    return normalized_label
+
 class ABSectionDataset(Dataset):
-    def __init__(self, csv_file, image_dir, section_size=13, transform=None):
+    def __init__(self, csv_file, image_dir, section_size=13, transform=None, target_transform=None):
         self.data = pd.read_csv(csv_file)
         self.image_dir = image_dir
-        self.section_size = section_size
         self.transform = transform
+        self.target_transform = target_transform
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, idx):
-        row = self.data.iloc[idx]
-
-        image_name = row['filename'] # name of file
-
-        section_id = row['section_id'] # number of the section: 1763 sections per image (500x500 pixels)
-
-        a_value = row['label_a'] # a value from central pixel of section
-        b_value = row['label_b'] # b value from central pixel of section
-
-        image_path = os.path.join(self.image_dir, image_name)
-        image = Image.open(image_path).convert("RGB")
-
-        num_sections = int(image.size[0] // self.section_size)
-        # print("num_sections: ", num_sections)
+        img_path = os.path.join(self.image_dir, self.data.iloc[idx, 0])
         
-        row_idx = section_id // num_sections
-        col_idx = section_id % num_sections
-
-        left = col_idx * self.section_size
-        upper = row_idx * self.section_size
-        right = left + self.section_size
-        lower = upper + self.section_size
-
-        section = image.crop((left, upper, right, lower)) # cut section out of image
-
+        image = Image.open(img_path)
+        
+        label = self.data.iloc[idx, 1:3].values
+        label = label.astype(np.float32)
+        
         if self.transform:
-            section = self.transform(section)
-
-        ab_values = torch.tensor([a_value, b_value], dtype=torch.float32) # tuple with a and b values from coloured image
-
-        return section, ab_values
+            image = self.transform(image)
+        if self.target_transform:
+            label = self.target_transform(label)
+        
+        return image, label
 
 # Transformation
 transform = transforms.Compose([
@@ -86,12 +75,12 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
 ])
 
-csv_path = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train_with_section_ids.csv"
+csv_path = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train.csv"
 data = pd.read_csv(csv_path)
 
 image_dir = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train"
 
-dataset = ABSectionDataset(csv_file=csv_path, image_dir=image_dir, section_size=13, transform=transform)
+dataset = ABSectionDataset(csv_file=csv_path, image_dir=image_dir, section_size=13, transform=transform, target_transform=target_transform)
 
 print(dataset)
 
@@ -112,8 +101,8 @@ def train_one_epoch(epoch_index, tb_writer):
 
     for i, data in enumerate(train_loader):
         inputs, labels = data
-        print("inputs: ", inputs)
-        print("labels: ", labels)
+        # print("inputs: ", inputs)
+        # print("labels: ", labels)
 
         optimizer.zero_grad()
         

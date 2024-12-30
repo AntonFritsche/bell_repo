@@ -302,29 +302,74 @@ output_csv_file_test = 'test_with_section_ids.csv'
 # img_resized = img.resize(target_size)
 # img_resized.save(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\1.png")
 
-def create_csv_train(csv_path, train_dir, output_csv_file):
-    data = pd.read_csv(csv_path)
+def rename_png_files(directory):
+    if not os.path.exists(directory):
+        print(f"Das Verzeichnis {directory} existiert nicht.")
+        return
+
+    png_files = [f for f in os.listdir(directory) if f.lower().endswith('.png')]
+    if not png_files:
+        print("Keine PNG-Dateien gefunden.")
+        return
     
-    counter = 0
-    for image_name in os.listdir(train_dir):
+    png_files.sort()
+
+    for index, file_name in enumerate(png_files, start=1):
+        old_path = os.path.join(directory, file_name)
+        new_name = f"image_1_{index}.png"
+        new_path = os.path.join(directory, new_name)
+
+        try:
+            os.rename(old_path, new_path)
+            print(f"Umbenannt: {file_name} -> {new_name}")
+        except Exception as e:
+            print(f"Fehler beim Umbenennen von {file_name}: {e}")
+
+    print("Umbenennung abgeschlossen.")
+
+# rename_png_files(r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train")
+
+def create_csv_train(csv_path, train_dir, output_csv_file):
+    if os.path.exists(csv_path):
+        data = pd.read_csv(csv_path)
+    else:
+        data = pd.DataFrame(columns=["section_id", "label_a", "label_b"])
+
+    new_rows = []
+    counter = len(data)
+
+    image_files = sorted(os.listdir(train_dir), key=lambda x: int(re.search(r'(\d+)', x).group()))
+    
+    for image_name in image_files:
         image_path = os.path.join(train_dir, image_name)
 
         image = cv2.imread(image_path)
+        if image is None:
+            print(f"Warnung: Bild {image_name} konnte nicht gelesen werden. Übersprungen.")
+            continue
 
-        # central_pixel = image[6, 6]
+        if image.shape[0] < 13 or image.shape[1] < 13:
+            print(f"Warnung: Bild {image_name} ist zu klein (weniger als 13x13). Übersprungen.")
+            continue
+
+        lab_image = cv2.cvtColor(image, cv2.COLOR_BGR2Lab)
+        _, A, B = cv2.split(lab_image)
+
+        central_a = A[6, 6]
+        central_b = B[6, 6]
+
+        new_rows.append({"section_id": image_name, "label_a": central_a, "label_b": central_b})
+        print(f"Verarbeitet: {image_name} | A: {central_a}, B: {central_b}")
         
-        L, A, B = cv2.split(image)
-
-        a_central = A[6, 6]
-        b_central = B[6, 6]
-
-        new_row = pd.DataFrame({"section_id": [counter], "label_a": [a_central], "label_b": [b_central]})
-        df = pd.concat([data, new_row], ignore_index=True)
-        print("Added new row with central pixel a and b values: ", counter)
         counter += 1
 
-    data.to_csv(output_csv_file, index=False)
-    print(f"Neue CSV gespeichert als: {output_csv_file}")
+    if new_rows:
+        new_data = pd.DataFrame(new_rows)
+        data = pd.concat([data, new_data], ignore_index=True)
 
-create_csv_train(r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train_empty.csv", r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train", r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train.csv")
+        data.to_csv(output_csv_file, index=False)
+        print(f"Neue CSV gespeichert als: {output_csv_file}")
+    else:
+        print("Keine neuen Daten zum Speichern.")
 
+create_csv_train("train.csv", r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train", r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train.csv")
