@@ -29,8 +29,8 @@ print("total parameters: ", total_params)
 print("output_size: ", params[0].size(), "\n")
 
 # test input for network
-# x = torch.randn(size=(1, 3, 13, 13))
-# print("x: ", conv_model(x))
+x = torch.randn(size=(1, 3, 13, 13)) # 1 image with 3 channels and 13x13 pixels
+print("x: ", conv_model(x))
 
 # Loss function
 loss_fn = nn.L1Loss()

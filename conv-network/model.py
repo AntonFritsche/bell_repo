@@ -48,36 +48,42 @@ class ConvModel(nn.Module):
         out = self.conv1(x)
         # print("\nconvolution 1: ", torch._shape_as_tensor(out)) # shape: (4, 11, 11)
         # sigmoid activation 1
-        out = F.sigmoid(out)
+        # out = F.relu(sigmoidut)
 
+        out = F.relu(out)
         # convolution 2
         out = self.conv2(out)
         # print("convolution 2: ", torch._shape_as_tensor(out)) # shape: (6, 9, 9)
         # sigmoid activation 2
+        # out = F.relu(out)
         out = F.sigmoid(out)
 
         # convolution 3
         out = self.conv3(out)
         # print("convolution 3: ", torch._shape_as_tensor(out)) # shape: (8, 7, 7)
         # sigmoid activation 3
+        # out = F.relu(out)
         out = F.sigmoid(out)
 
         # convolution 4
         out = self.conv4(out)
         # print("convolution 4: ", torch._shape_as_tensor(out)) # shape: (12, 5, 5)
         # sigmoid activation 4
+        # out = F.relu(out)
         out = F.sigmoid(out)
 
         # convolution 5
         out = self.conv5(out)
         # print("convolution 5: ", torch._shape_as_tensor(out)) # shape: (24, 3, 3)
         # sigmoid activation 5
+        # out = F.relu(out)
         out = F.sigmoid(out)
 
         # convolution 6
         out = self.conv6(out)
         # print("convolution 6: ", torch._shape_as_tensor(out)) # shape: (32, 1 1)
         # sigmoid activation 6
+        # out = F.relu(out)
         out = F.sigmoid(out)
 
         # Flatten the output from conv layers
@@ -86,16 +92,20 @@ class ConvModel(nn.Module):
 
         # fully connected layers with sigmoid activations
         out = self.fc1(out)
+        # out = F.relu(out)
         out = F.sigmoid(out)
 
         out = self.fc2(out)
+        # out = F.relu(out)
         out = F.sigmoid(out)
 
         out = self.fc3(out)
+        # out = F.relu(out)
         out = F.sigmoid(out)
 
         out = self.fc4(out)
+        # out = F.relu(out)
         out = F.sigmoid(out)
-
-        return out # (B, 2) --> A und B Farbchannel
+        # print(torch._shape_as_tensor(out))
+        return out # shape: tensor([2])
     
