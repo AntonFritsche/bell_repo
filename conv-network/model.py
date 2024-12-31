@@ -12,34 +12,34 @@ class ConvModel(nn.Module):
         self.filter_size = 3 # -> 6 conv layers
         
         # convolution 1
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=4, kernel_size=self.filter_size)
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=8, kernel_size=self.filter_size)
 
         # convolution 2
-        self.conv2 = nn.Conv2d(in_channels=4, out_channels=6, kernel_size=self.filter_size)
+        self.conv2 = nn.Conv2d(in_channels=8, out_channels=16, kernel_size=self.filter_size)
 
         # convolution 3
-        self.conv3 = nn.Conv2d(in_channels=6, out_channels=8, kernel_size=self.filter_size)
+        self.conv3 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=self.filter_size)
 
         # convolution 4
-        self.conv4 = nn.Conv2d(in_channels=8, out_channels=12, kernel_size=self.filter_size)
+        self.conv4 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=self.filter_size)
 
         # convolution 5
-        self.conv5 = nn.Conv2d(in_channels=12, out_channels=24, kernel_size=self.filter_size)
+        self.conv5 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=self.filter_size)
 
         # convolution 6
-        self.conv6 = nn.Conv2d(in_channels=24, out_channels=32, kernel_size=self.filter_size)
+        self.conv6 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=self.filter_size)
         
         # fully connected layer 1
-        self.fc1 = nn.Linear(in_features=32, out_features=16)
+        self.fc1 = nn.Linear(in_features=256, out_features=64)
         
         # fully connected layer 2
-        self.fc2 = nn.Linear(in_features=16, out_features=8)
+        self.fc2 = nn.Linear(in_features=64, out_features=32)
 
         # fully connected layer 3
-        self.fc3 = nn.Linear(in_features=8, out_features=4)
+        self.fc3 = nn.Linear(in_features=32, out_features=8)
 
         # fully connected layer 4
-        self.fc4 = nn.Linear(in_features=4, out_features=2)
+        self.fc4 = nn.Linear(in_features=8, out_features=2)
     
     def forward(self, x):
         # test shape: (1, 13, 13)
