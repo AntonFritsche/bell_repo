@@ -50,7 +50,8 @@ class ConvModel(nn.Module):
         # sigmoid activation 1
         # out = F.relu(sigmoidut)
 
-        out = F.relu(out)
+        # out = F.relu(out)
+        out = F.sigmoid(out)
         # convolution 2
         out = self.conv2(out)
         # print("convolution 2: ", torch._shape_as_tensor(out)) # shape: (6, 9, 9)
@@ -88,7 +89,8 @@ class ConvModel(nn.Module):
 
         # Flatten the output from conv layers
         out = torch.flatten(out, 1) # Flatten from [(batch_size,) 32, 1, 1] to [(batch_size,) 32, 1]
-        out = torch.flatten(out, 0) # Flatten from [(batch_size,) 32, 1] to [(batch_size,) 32] 
+        # out = torch.flatten(out, 0) # Flatten from [(batch_size,) 32, 1] to [(batch_size,) 32]
+        # print("after flatten layer: ", torch._shape_as_tensor(out))
 
         # fully connected layers with sigmoid activations
         out = self.fc1(out)
@@ -107,5 +109,6 @@ class ConvModel(nn.Module):
         # out = F.relu(out)
         out = F.sigmoid(out)
         # print(torch._shape_as_tensor(out))
+
         return out # shape: tensor([2])
     

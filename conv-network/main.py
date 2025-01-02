@@ -29,7 +29,7 @@ print("total parameters: ", total_params)
 print("output_size: ", params[0].size(), "\n")
 
 # test input for network
-x = torch.randn(size=(1, 3, 13, 13)) # 1 image with 3 channels and 13x13 pixels
+x = torch.randn(size=(32, 3, 13, 13)) # 1 image with 3 channels and 13x13 pixels
 print("x: ", conv_model(x))
 
 # Loss function
@@ -82,9 +82,9 @@ image_dir = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train"
 
 dataset = ABSectionDataset(csv_file=csv_path, image_dir=image_dir, section_size=13, transform=transform, target_transform=target_transform)
 
-print(dataset)
+# print(dataset)
 
-subset_indices = list(range(1000))
+subset_indices = list(range(10000))
 subset = Subset(dataset, subset_indices)
 
 train_size = int(0.9 * len(subset))
@@ -92,8 +92,8 @@ val_size = len(subset) - train_size
 
 train_dataset, val_dataset = random_split(subset, [train_size, val_size])
 
-train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False)
 
 def train_one_epoch(epoch_index, tb_writer):
     running_loss = 0.0
@@ -109,9 +109,16 @@ def train_one_epoch(epoch_index, tb_writer):
         # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         inputs = inputs.to("cpu")
         outputs = conv_model(inputs)
+        
+        # Rescaling of the outputs and labels
+        outputs = outputs * 128
+        labels = labels * 128
+
+        # print("outputs: ", outputs[:1])
+        # print("labels: ", labels[:1])
 
         loss = loss_fn(outputs, labels)
-        loss = torch.tensor(loss, requires_grad=True)
+        loss = loss.clone().detach().requires_grad_(True)
         loss.backward()
 
         optimizer.step()
