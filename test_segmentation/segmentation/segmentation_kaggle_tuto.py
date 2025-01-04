@@ -4,9 +4,8 @@ import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 from math import log2
-import tensorflow as tf
-from tensorflow.keras.optimizers import SGD
-from tf.python.keras.layers import Input 
+from tensorflow.python.keras.optimizers import gradient_descent_v2
+from tensorflow.python.keras.layers import Input
 from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.callbacks import ModelCheckpoint, CSVLogger, ReduceLROnPlateau, EarlyStopping
 from tensorflow.python.keras.models import load_model
@@ -24,27 +23,27 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 
 
-def mlp(x, cf):
-    x = L.Dense(cf["mlp_dim"], activation="gelu")(x)
-    x = L.Dropout(cf["dropout_rate"])(x)
-    x = L.Dense(cf["hidden_dim"])(x)
-    x = L.Dropout(cf["dropout_rate"])(x)
-    return x
+def mlp(x_param, cf_param):
+    x_param = L.Dense(cf_param["mlp_dim"], activation="gelu")(x_param)
+    x_param = L.Dropout(cf_param["dropout_rate"])(x_param)
+    x_param = L.Dense(cf_param["hidden_dim"])(x_param)
+    x_param = L.Dropout(cf_param["dropout_rate"])(x_param)
+    return x_param
 
 def transformer_encoder(x, cf):
     skip_1 = x
-    x = L.LayerNormalization()(x)
+    x = L.LayerNormalization()(input)
     x = L.MultiHeadAttention(
         num_heads=cf["num_heads"], key_dim=cf["hidden_dim"]
     )(x, x)
-    x = L.Add()([x, skip_1])
+    x = L.Add()([input, skip_1])
 
-    skip_2 = x
-    x = L.LayerNormalization()(x)
+    skip_2 = input
+    x = L.LayerNormalization()(input)
     x = mlp(x, cf)
-    x = L.Add()([x, skip_2])
+    x = L.Add()([input, skip_2])
 
-    return x
+    return input
 
 def conv_block(x, num_filters, kernel_size=3):
     x = L.Conv2D(num_filters, kernel_size=kernel_size, padding="same")(x)
@@ -309,7 +308,7 @@ if __name__ == "__main__":
     train_dataset = tf_dataset(train_x, train_y, batch=batch_size)
     valid_dataset = tf_dataset(valid_x, valid_y, batch=batch_size)
 
-    optimizer = SGD(lr)
+    optimizer = gradient_descent_v2.SGD(lr)
     """ Model """
     model = build_unetr_2d(cf)
     model.compile(loss=dice_loss, optimizer=optimizer, metrics=[dice_coef, "acc"])

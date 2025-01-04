@@ -29,9 +29,9 @@ print("total parameters: ", total_params)
 print("output_size: ", params[0].size(), "\n")
 
 # test input for network
-x = torch.randn(size=(32, 3, 13, 13)) # 1 image with 3 channels and 13x13 pixels
-print("x:", x)
-print("x_prediction: ", conv_model(x))
+# x = torch.randn(size=(32, 3, 13, 13)) # 1 image with 3 channels and 13x13 pixels
+# print("x:", x)
+# print("x_prediction: ", (conv_model(x)))
 
 # Loss function
 loss_fn = nn.L1Loss()
@@ -39,14 +39,14 @@ loss_fn = nn.L1Loss()
 # Optimizers specified in the torch.optim package
 optimizer = torch.optim.Adam(conv_model.parameters(), lr=0.001)
 
-def target_transform(label):
-    label_tensor = torch.tensor(label, dtype=torch.float)
-    
-    normalized_label = label_tensor / 128.0  # scaling by factor of 128
+def target_transform(target):
+    target = torch.tensor(target, dtype=torch.float32)
+    normalized_label  = target / 128
     return normalized_label
 
+
 class ABSectionDataset(Dataset):
-    def __init__(self, csv_file, image_dir_param, section_size=13, transform_func=None, target_transform_func=None):
+    def __init__(self, csv_file, image_dir_param, transform_func=None, target_transform_func=None):
         self.data = pd.read_csv(csv_file)
         self.image_dir = image_dir
         self.transform = transform
@@ -73,7 +73,7 @@ class ABSectionDataset(Dataset):
 # Transformation
 transform = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+    transforms.Normalize(mean=[0.5], std=[0.5])
 ])
 
 csv_path = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train.csv"
@@ -81,7 +81,7 @@ data = pd.read_csv(csv_path)
 
 image_dir = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train"
 
-dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, section_size=13, transform_func=transform, target_transform_func=target_transform)
+dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, transform_func=transform)
 
 # print(dataset)
 
@@ -93,85 +93,43 @@ val_size = len(subset) - train_size
 
 train_dataset, val_dataset = random_split(subset, [train_size, val_size])
 
-train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False)
-
-def train_one_epoch(epoch_index, tb_writer_param):
-    running_loss = 0.0
-    last_loss = 0.0
-
-    for i, data_train_loader in enumerate(train_loader):
-        inputs, labels = data_train_loader
-        # print("inputs: ", inputs)
-        # print("labels: ", labels)
-
-        optimizer.zero_grad()
-        
-        # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        inputs = inputs.to("cpu")
-        outputs = conv_model(inputs)
-        
-        # Rescaling of the outputs and labels
-        outputs = outputs * 128
-        labels = labels * 128
-
-        print("outputs: ", outputs[:1])
-        print("labels: ", labels[:1])
-
-        # print("outputs: ", outputs[:1])
-        # print("labels: ", labels[:1])
-
-        loss = loss_fn(outputs, labels)
-        loss = loss.clone().detach().requires_grad_(True)
-        loss.backward()
-
-        optimizer.step()
-        
-        running_loss += loss.item()
-
-        if i % 1000 == 999:
-            last_loss = running_loss / 1000
-            print(f'  Batch {i + 1} loss: {last_loss:.4f}')
-            
-            tb_x = epoch_index * len(train_loader) + i + 1
-            tb_writer_param.add_scalar('Loss/train', last_loss, tb_x)
-            
-            running_loss = 0.0
-
-    val_loss_train = validate_model(val_loader)
-    return last_loss, val_loss_train
-
-def validate_model(val_loader_param):
-    conv_model.eval()
-    val_loss = 0.0
-    correct = 0
-    total = 0
-    
-    with torch.no_grad():
-        for inputs, labels in val_loader_param:
-            inputs, labels = inputs.to("cpu"), labels.to("cpu")
-            outputs = conv_model(inputs)
-
-            loss = loss_fn(outputs, labels)
-            val_loss += loss.item()
-
-            predicted = torch.argmax(outputs, dim=0)
-            correct += (predicted == labels).sum().item()
-            total += labels.size(0)
-
-    val_loss /= len(val_loader_param)
-    accuracy = 100 * correct / total
-
-    print(f'Validation Loss: {val_loss:.4f}, Accuracy: {accuracy:.2f}%')
-    conv_model.train()
-    return val_loss
+train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
 
 num_epochs = 20
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+conv_model.to(device)
 
 for epoch in range(num_epochs):
-    print(f'Epoch {epoch + 1}/{num_epochs}')
-    tb_writer = SummaryWriter()
+    conv_model.train()
+    running_loss = 0.0
+    for images, targets in train_loader:
+        images, targets = images.to(device), targets.to(device)
 
-    train_loss, validation_loss = train_one_epoch(epoch, tb_writer)
-    
-    print(f'Epoch {epoch + 1} - Training Loss: {train_loss:.4f}, Validation Loss: {validation_loss:.4f}')
+        # Forward pass
+        outputs = conv_model(images)
+        rescaled_outputs = outputs * 128
+        loss = loss_fn(outputs, targets)
+
+        # Backward pass and optimization
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        running_loss += loss.item()
+
+    print(f"Epoch {epoch+1}/{num_epochs}, Loss: {running_loss/len(train_loader):.4f}")
+
+    # Validation (optional)
+    conv_model.eval()
+    val_loss = 0.0
+    with torch.no_grad():
+        for images, targets in val_loader:
+            images, targets = images.to(device), targets.to(device)
+            outputs = conv_model(images)
+            loss = loss_fn(outputs, targets)
+            val_loss += loss.item()
+    print(f"Validation Loss: {val_loss/len(val_loader):.4f}")
+
+model_path = r".\saved-models"
+torch.save(conv_model.state_dict(), model_path)

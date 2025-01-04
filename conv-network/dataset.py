@@ -221,7 +221,7 @@ def rename_images_in_train_and_test():
 # rename_images_in_train_and_test()
 
 
-def preprocess_image(input_image, section_size=13, overlap=1):
+def preprocess_image(output_ordner, input_image, section_size=13, overlap=1):
     image = cv2.imread(input_image)
     if image is None:
         raise ValueError(f"Image at path '{input_image}' could not be read.")
@@ -229,12 +229,11 @@ def preprocess_image(input_image, section_size=13, overlap=1):
     image_lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
     img_height, img_width, _ = image_lab.shape
 
-    output_ordner = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train"
     section_count = 0
     
     for y in range(img_height - section_size + 1):  # height
         for x in range(img_width - section_size + 1):  # width
-            # cuttin the section out of the image
+            # cutting the section out of the image
             sektion = image[y:y + section_size, x:x + section_size]
             
             # safe section
@@ -323,7 +322,7 @@ def rename_png_files(directory):
             os.rename(old_path, new_path)
             print(f"Umbenannt: {file_name} -> {new_name}")
         except Exception as e:
-            print(f"Fehler beim Umbenennen von {file_name}: {e}")
+            print(f"Feeler beim Umbenennen von {file_name}: {e}")
 
     print("Umbenennung abgeschlossen.")
 
