@@ -108,8 +108,9 @@ for epoch in range(num_epochs):
 
         # Forward pass
         outputs = conv_model(images)
-        rescaled_outputs = outputs * 128
-        loss = loss_fn(outputs, targets)
+        rescaled_outputs = torch.mul(outputs, 128) # scale the outputs back to lab color space
+
+        loss = loss_fn(rescaled_outputs, targets)
 
         # Backward pass and optimization
         optimizer.zero_grad()
@@ -118,6 +119,8 @@ for epoch in range(num_epochs):
 
         running_loss += loss.item()
 
+    # noinspection PyUnboundLocalVariable
+    print(f"predicted outputs: {rescaled_outputs[:1]}")
     print(f"Epoch {epoch+1}/{num_epochs}, Loss: {running_loss/len(train_loader):.4f}")
 
     # Validation (optional)
@@ -127,9 +130,11 @@ for epoch in range(num_epochs):
         for images, targets in val_loader:
             images, targets = images.to(device), targets.to(device)
             outputs = conv_model(images)
+
+            rescaled_outputs_loss = torch.mul(outputs, 128) # scale the outputs back to lab color space
             loss = loss_fn(outputs, targets)
             val_loss += loss.item()
     print(f"Validation Loss: {val_loss/len(val_loader):.4f}")
 
-model_path = r"E:\Programmierung\Datein\Python\bell_repo\conv-network\saved-models\conv_model.pth"
+model_path = r"E:\Programmierung\Datein\Python\bell_repo\conv-network\saved-models\conv_model_2.pth"
 torch.save(conv_model.state_dict(), model_path)

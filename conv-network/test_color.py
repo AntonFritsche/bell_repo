@@ -17,7 +17,7 @@ import datetime
 from torchvision.io import read_image
 import matplotlib.pyplot as plt
 
-model_path = r"E:\Programmierung\Datein\Python\bell_repo\conv-network\saved-models\conv_model.pth"
+model_path = r"/conv-network/saved-models/conv_model_1.pth"
 conv_model = model.ConvModel()
 conv_model.load_state_dict(torch.load(model_path, weights_only=True))
 
@@ -78,13 +78,13 @@ def rebuild_image(
 
         original_height, original_width = image.shape[:2]
 
-        input_tensor = torch.tensor(image, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0)# right input dimension for the model
+        input_tensor = torch.tensor(image, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0) # right input dimension for the model
         # print(f"Input tensor shape: {input_tensor.shape}")
-        print(f"first input tensor shape: {input_tensor.shape}")# shape: [1, 3, 13, 13]
+        print(f"first input tensor shape: {input_tensor.shape}") # shape: [1, 3, 13, 13]
         # input_tensor = normalize_lab(input_tensor)
         # print(f"Normalized LAB image shape: {input_tensor.shape}")
         input_tensor = input_tensor.clone().detach().float()
-        print(f"second input tensor shape: {input_tensor.shape}")# shape: [1, 3, 13, 13]
+        print(f"second input tensor shape: {input_tensor.shape}") # shape: [1, 3, 13, 13]
 
         with torch.no_grad():
             output = model_param(input_tensor)
@@ -92,14 +92,14 @@ def rebuild_image(
                 print(f"Error: Model provided no output for {image_name}")
                 continue
 
-        scaled_output = output * 128
+        scaled_output = torch.mul(output, 128) # scale the outputs back to lab color space
         print(scaled_output)
         if output is None or torch.isnan(scaled_output).any():
             print(f"Error: Invalid output from the model for {image_name}")
             continue
 
         pred_image = create_image_from_predictions_func(image, output.squeeze(0).cpu().numpy())
-        print(f"third input tensor shape: {input_tensor.shape}")# shape: [1, 3, 13, 13]
+        print(f"third input tensor shape: {input_tensor.shape}") # shape: [1, 3, 13, 13]
         if pred_image is None:
             print(f"Error: Invalid image from function for {image_name}")
             continue
@@ -111,7 +111,7 @@ def rebuild_image(
 
         # Resize predicted image to match the original image size (original_width, original_height)
         pred_image_resized = cv2.resize(pred_image, (original_width, original_height), interpolation=cv2.INTER_LINEAR)
-        print(f"fourth input tensor shape: {input_tensor.shape}")# shape: [1, 3, 13, 13]
+        print(f"fourth input tensor shape: {input_tensor.shape}") # shape: [1, 3, 13, 13]
         # print(f"Original image size: {image.shape}")
         # print(f"Predicted image size after resize: {pred_image_resized.shape}")
 
