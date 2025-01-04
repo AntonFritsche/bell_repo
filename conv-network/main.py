@@ -131,5 +131,5 @@ for epoch in range(num_epochs):
             val_loss += loss.item()
     print(f"Validation Loss: {val_loss/len(val_loader):.4f}")
 
-model_path = r".\saved-models"
+model_path = r"E:\Programmierung\Datein\Python\bell_repo\conv-network\saved-models\conv_model.pth"
 torch.save(conv_model.state_dict(), model_path)
