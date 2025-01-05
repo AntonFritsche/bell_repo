@@ -1,19 +1,16 @@
-import torch as torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import DataLoader, random_split
-from torch.utils.data import Dataset
-from torchvision import transforms
-from torch.utils.tensorboard import SummaryWriter
-from PIL import Image
-from torch.utils.data import Subset
+import os
+
 import numpy as np
 import pandas as pd
+import torch as torch
+import torch.nn as nn
+from PIL import Image
+from torch.utils.data import DataLoader, random_split
+from torch.utils.data import Dataset
+from torch.utils.data import Subset
+from torchvision import transforms
+
 import model
-import cv2
-import os
-import datetime
-from torchvision.io import read_image
 
 #instantate the convolution model
 conv_model = model.ConvModel()
@@ -39,18 +36,17 @@ loss_fn = nn.L1Loss()
 # Optimizers specified in the torch.optim package
 optimizer = torch.optim.Adam(conv_model.parameters(), lr=0.001)
 
-def target_transform(target):
+def target_transform_func(target):
     target = torch.tensor(target, dtype=torch.float32)
-    normalized_label  = torch.div(target, 100) # rescale target to the range (-1; 1) for better data handling for the model
+    normalized_label  = torch.div(target, 128) # rescale target to the range (-1; 1) for better data handling for the model
     return normalized_label
-
 
 class ABSectionDataset(Dataset):
     def __init__(self, csv_file, image_dir_param, transform_func=None, target_transform_func=None):
         self.data = pd.read_csv(csv_file)
         self.image_dir = image_dir
         self.transform = transform
-        self.target_transform = target_transform
+        self.target_transform = target_transform_func
 
     def __len__(self):
         return len(self.data)
@@ -60,14 +56,12 @@ class ABSectionDataset(Dataset):
         
         image = Image.open(img_path)
         
-        label = self.data.iloc[idx, 1:].values
-        label = label.astype(np.float32)
+        label = self.data.iloc[idx, 1:3].values.astype(np.float32)
         
         if self.transform:
             image = self.transform(image)
         if self.target_transform:
             label = self.target_transform(label)
-        
         return image, label
 
 # Transformation

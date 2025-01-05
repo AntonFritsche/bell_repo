@@ -2,9 +2,9 @@
 import torch as torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
-import pandas as pd
-import cv2
+# import numpy as np
+# import pandas as pd
+# import cv2
 
 class ConvModel(nn.Module):
     def __init__(self) -> None:

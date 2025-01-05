@@ -7,6 +7,10 @@ import re
 import cv2
 import pandas as pd
 
+def extract_numbers(filename):
+    match = re.findall(r'\d+', filename)
+    return int(match[0]) if match else 0
+
 def create_datasets(source_folder, dest_folder, test_size=200):
     train_folder = os.path.join(dest_folder, 'train')
     test_folder = os.path.join(dest_folder, 'test')
@@ -46,9 +50,13 @@ conv_network_folder = "../conv-network"
 # create_datasets(source_folder, conv_network_folder)
 
 def convert_images_to_grayscale(folder_path):
-    images = [os.path.join(folder_path, img) for img in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, img))]
-    images = images[:10000]
-    for image_path in images:
+    max_images = 10000
+    image_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
+    image_files.sort(key=lambda x: extract_numbers(os.path.basename(x)))
+    image_files = image_files[:max_images]
+
+    for image_name in image_files:
+        image_path = os.path.join(folder_path, image_name)
         try:
             with Image.open(image_path) as img:
                 grayscale_img = img.convert("L")
@@ -58,12 +66,40 @@ def convert_images_to_grayscale(folder_path):
             print(f"Fehler beim Konvertieren von {image_path}: {e}")
 
 greyscale_folder = "./train"
-# convert_images_to_grayscale(greyscale_folder)
+convert_images_to_grayscale(greyscale_folder)
+
+def convert_images_to_lab(folder_path):
+    images = [os.path.join(folder_path, img) for img in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, img))]
+
+    images.sort(key=lambda x: extract_numbers(os.path.basename(x)))
+    images = images[:10000]
+    print(images[:5])
+
+    for image_path in images:
+        try:
+            img = Image.open(image_path)
+
+            img_color = img.convert("RGB")
+            img_color.save(image_path)
+
+            img_bgr = cv2.imread(image_path)
+            if img_bgr is None:
+                print(f"Bild {image_path} konnte nicht geladen werden. Überspringen...")
+                continue
+            img_lab = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2LAB)
+
+            cv2.imwrite(image_path, img_lab)
+            print(f"LAB-Bild: {os.path.basename(image_path)} erfolgreich gespeichert.")
+
+        except Exception as e:
+            print(f"Fehler beim Konvertieren von {image_path}: {e}")
+
+# convert_images_to_lab(greyscale_folder)
 
 def create_csv_from_dataset(folder_path, csv_path):
     with open(csv_path, mode='w', newline='') as csv_file:
         csv_writer = csv.writer(csv_file)
-        csv_writer.writerow(["filename", "label"])
+        csv_writer.writerow(["filename", "label_a", "label_b"])
 
         for category in os.listdir(folder_path):
             category_path = os.path.join(folder_path, category)
@@ -221,7 +257,6 @@ def rename_images_in_train_and_test():
 
 # rename_images_in_train_and_test()
 
-
 def preprocess_image(output_ordner, input_image, section_size=13, overlap=1):
     image = cv2.imread(input_image)
     if image is None:
@@ -242,7 +277,7 @@ def preprocess_image(output_ordner, input_image, section_size=13, overlap=1):
             print(f"Saved section: {output_ordner}/sektion_{x}_{y}.jpf")
             section_count += 1
 
-# preprocess_image("1.png")
+# preprocess_image("train/", "1.png")
 
 def process_all_images(image_dir, csv_path, section_size=13, overlap=1):
     with open(csv_path, mode='a', newline='') as csv_file:
@@ -269,7 +304,6 @@ csv_file_path_train = "data.csv"
 
 # process_all_images(image_directory_test, csv_file_path_test)
 # process_all_images(image_directory_train, csv_file_path_train)
-
 
 def add_section_id_to_csv(csv_file, output_csv_file):
     data = pd.read_csv(csv_file)
@@ -332,50 +366,42 @@ def rename_png_files(directory):
 
 # rename_png_files(r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train")
 
-def create_csv_train(csv_path, train_dir, output_csv_file):
-    if os.path.exists(csv_path):
-        data = pd.read_csv(csv_path)
-    else:
-        data = pd.DataFrame(columns=["section_id", "label_a", "label_b"])
+def create_csv_train(csv_path, train_dir):
+    max_images = 10000
+    image_files = [f for f in os.listdir(train_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
+    image_files = image_files[:max_images]
+    image_files.sort(key=lambda x: extract_numbers(os.path.basename(x)))
 
-    new_rows = []
-    counter = len(data)
+    with open(csv_path, mode='w', newline='') as csv_file:
+        csv_writer = csv.writer(csv_file)
 
-    image_files = sorted(os.listdir(train_dir), key=lambda x: int(re.search(r'(\d+)', x).group()))
-    
-    for image_name in image_files:
-        image_path = os.path.join(train_dir, image_name)
+        csv_writer.writerow(['image_name', 'label'])
 
-        image = cv2.imread(image_path)
-        if image is None:
-            print(f"Warnung: Bild {image_name} konnte nicht gelesen werden. Übersprungen.")
-            continue
+        for image_name in image_files:
+            image_path = os.path.join(train_dir, image_name)
+            try:
+                image = cv2.imread(image_path)
+                if image is None:
+                    raise ValueError(f"Bild an Pfad '{image_path}' konnte nicht gelesen werden.")
 
-        if image.shape[0] < 13 or image.shape[1] < 13:
-            print(f"Warnung: Bild {image_name} ist zu klein (weniger als 13x13). Übersprungen.")
-            continue
+                _, A, B = cv2.split(lab_image)
 
-        lab_image = cv2.cvtColor(image, cv2.COLOR_BGR2Lab)
-        _, A, B = cv2.split(lab_image)
+                central_a = A[6, 6]
+                central_b = B[6, 6]
 
-        central_a = A[6, 6]
-        central_b = B[6, 6]
+                label_a = int(central_a)
+                label_b = int(central_b)
 
-        new_rows.append({"section_id": image_name, "label_a": central_a, "label_b": central_b})
-        print(f"Verarbeitet: {image_name} | A: {central_a}, B: {central_b}")
-        
-        counter += 1
+                csv_writer.writerow([image_name, label_a, label_b])
+                print(f"Processed and saved: {image_name}, label: {label_a}; {label_b}")
+            except Exception as e:
+                print(f"Fehler bei der Verarbeitung von {image_name}: {e}")
 
-    if new_rows:
-        new_data = pd.DataFrame(new_rows)
-        data = pd.concat([data, new_data], ignore_index=True)
+            lab_image = cv2.cvtColor(image, cv2.COLOR_BGR2Lab)
 
-        data.to_csv(output_csv_file, index=False)
-        print(f"Neue CSV gespeichert als: {output_csv_file}")
-    else:
-        print("Keine neuen Daten zum Speichern.")
-
-# create_csv_train("train.csv", r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train", r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train.csv")
+section_directory = "train/"
+csv_file = "data.csv"
+# create_csv_train(csv_file, section_directory)
 
 def extract_l_channel_and_save_to_csv(section_dir, csv_path, max_images=10000):
     image_files = [f for f in os.listdir(section_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
@@ -407,7 +433,4 @@ def extract_l_channel_and_save_to_csv(section_dir, csv_path, max_images=10000):
             except Exception as e:
                 print(f"Fehler bei der Verarbeitung von {image_name}: {e}")
 
-section_directory = "train/"
-csv_output_path = "data.csv"
-
-extract_l_channel_and_save_to_csv(section_directory, csv_output_path)
+# extract_l_channel_and_save_to_csv(section_directory, csv_output_path)
