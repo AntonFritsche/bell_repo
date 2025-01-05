@@ -41,7 +41,7 @@ optimizer = torch.optim.Adam(conv_model.parameters(), lr=0.001)
 
 def target_transform(target):
     target = torch.tensor(target, dtype=torch.float32)
-    normalized_label  = torch.div(target, 128) # rescale target to the range (-1; 1) for better data handling for the model
+    normalized_label  = torch.div(target, 100) # rescale target to the range (-1; 1) for better data handling for the model
     return normalized_label
 
 
@@ -60,7 +60,7 @@ class ABSectionDataset(Dataset):
         
         image = Image.open(img_path)
         
-        label = self.data.iloc[idx, 1:3].values
+        label = self.data.iloc[idx, 1:].values
         label = label.astype(np.float32)
         
         if self.transform:
@@ -76,10 +76,10 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.5], std=[0.5])
 ])
 
-csv_path = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train.csv"
+csv_path = r"E:\Programmierung\Datein\Python\bell_repo\conv-network\data.csv"
 data = pd.read_csv(csv_path)
 
-image_dir = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train"
+image_dir = r"E:\Programmierung\Datein\Python\bell_repo\conv-network\train"
 
 dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, transform_func=transform)
 
@@ -105,10 +105,10 @@ for epoch in range(num_epochs):
     running_loss = 0.0
     for images, targets in train_loader:
         images, targets = images.to(device), targets.to(device)
-
+        # print(f"images.shape: {images.shape}")
         # Forward pass
         outputs = conv_model(images)
-        rescaled_outputs = torch.mul(outputs, 128) # scale the outputs back to lab color space
+        rescaled_outputs = torch.mul(outputs, 100) # scale the outputs back to lab color space
 
         loss = loss_fn(rescaled_outputs, targets)
 
