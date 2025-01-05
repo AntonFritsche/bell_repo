@@ -8,4 +8,4 @@ train.csv
 test_with_section_ids.csv
 train_with_section_ids.csv
 runs/
-prediction_cat/
+prediction_cat/!/conv-network/data.csv

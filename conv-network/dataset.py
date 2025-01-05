@@ -47,16 +47,17 @@ conv_network_folder = "../conv-network"
 
 def convert_images_to_grayscale(folder_path):
     images = [os.path.join(folder_path, img) for img in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, img))]
-
+    images = images[:10000]
     for image_path in images:
         try:
             with Image.open(image_path) as img:
                 grayscale_img = img.convert("L")
                 grayscale_img.save(image_path)
+                print(f"Grayscaled image:{os.path.basename(image_path)} saved to {folder_path}")
         except Exception as e:
             print(f"Fehler beim Konvertieren von {image_path}: {e}")
 
-greyscale_folder = "./test"
+greyscale_folder = "./train"
 # convert_images_to_grayscale(greyscale_folder)
 
 def create_csv_from_dataset(folder_path, csv_path):
@@ -86,7 +87,7 @@ def resize_images(folder_path, size=(500, 500)):
         try:
             with Image.open(image_path) as img:
                 filename = os.path.basename(image_path)
-                cleared_filename = re.sub(r'[^a-zA-Z0-9]', '', filename.split('.')[0])  # Unerwünschte Zeichen entfernen
+                cleared_filename = re.sub(r'[^a-zA-Z0-9]', '', filename.split('.')[0])  # Unerwünschte Zeichen referent
                 
                 resized_image = img.resize(size)
                 
@@ -246,8 +247,10 @@ def preprocess_image(output_ordner, input_image, section_size=13, overlap=1):
 def process_all_images(image_dir, csv_path, section_size=13, overlap=1):
     with open(csv_path, mode='a', newline='') as csv_file:
         csv_writer = csv.writer(csv_file)
-        
-        for image_name in os.listdir(image_dir):
+
+        images = os.listdir(image_dir)
+        images = images[:10000]
+        for image_name in images:
             if image_name.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
                 image_path = os.path.join(image_dir, image_name)
                 
@@ -259,13 +262,14 @@ def process_all_images(image_dir, csv_path, section_size=13, overlap=1):
                 except Exception as e:
                     print(f"Error processing {image_path}: {e}")
 
+# csv_file_path_test = "test.csv"
+# image_directory_test = "test/"
 image_directory_train = "train/"
-image_directory_test = "test/"
-csv_file_path_train = "train.csv"
-csv_file_path_test = "test.csv"
+csv_file_path_train = "data.csv"
 
-# process_all_images(image_directory_train, csv_file_path_train)
 # process_all_images(image_directory_test, csv_file_path_test)
+# process_all_images(image_directory_train, csv_file_path_train)
+
 
 def add_section_id_to_csv(csv_file, output_csv_file):
     data = pd.read_csv(csv_file)
@@ -371,4 +375,39 @@ def create_csv_train(csv_path, train_dir, output_csv_file):
     else:
         print("Keine neuen Daten zum Speichern.")
 
-create_csv_train("train.csv", r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train", r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train.csv")
+# create_csv_train("train.csv", r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train", r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train.csv")
+
+def extract_l_channel_and_save_to_csv(section_dir, csv_path, max_images=10000):
+    image_files = [f for f in os.listdir(section_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
+    image_files = image_files[:max_images]
+
+    with open(csv_path, mode='w', newline='') as csv_file:
+        csv_writer = csv.writer(csv_file)
+
+        csv_writer.writerow(['image_name', 'label'])
+
+        for image_name in image_files:
+            image_path = os.path.join(section_dir, image_name)
+            try:
+                image = cv2.imread(image_path)
+                if image is None:
+                    raise ValueError(f"Bild an Pfad '{image_path}' konnte nicht gelesen werden.")
+
+                image_lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+
+                l_channel = image_lab[:, :, 0]
+
+                center_x = l_channel.shape[1] // 2
+                center_y = l_channel.shape[0] // 2
+
+                label = int(l_channel[center_y, center_x])
+
+                csv_writer.writerow([image_name, label])
+                print(f"Processed and saved: {image_name}, label: {label}")
+            except Exception as e:
+                print(f"Fehler bei der Verarbeitung von {image_name}: {e}")
+
+section_directory = "train/"
+csv_output_path = "data.csv"
+
+extract_l_channel_and_save_to_csv(section_directory, csv_output_path)

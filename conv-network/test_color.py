@@ -19,13 +19,20 @@ import cv2
 import os
 import matplotlib.pyplot as plt
 
-model_path = r"/conv-network/saved-models/conv_model_1.pth"
+model_path = r"E:\Programmierung\Datein\Python\bell_repo\conv-network\saved-models\conv_model_2.pth"
 conv_model = model.ConvModel()
 conv_model.load_state_dict(torch.load(model_path, weights_only=True))
 
+def show_image(image):
+    plt.imshow(image, cmap='gray')
+    plt.axis('off')
+    plt.title("Reconstructed Image")
+    plt.show()
+
 # creates an LAB image from the predictions of the model and returns it
 def create_image_from_predictions(input_image, prediction):
-    a, b = prediction
+    prediction_rescaled = np.divide(prediction, 128) # scale the outputs back to lab color space
+    a, b = prediction_rescaled
 
     height, width = 13, 13
     lab_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2Lab)
@@ -34,31 +41,30 @@ def create_image_from_predictions(input_image, prediction):
     image = np.zeros((height, width, 3), np.uint8)
 
     image[:, :, 0] = l_channel
-    image[:, :, 1] = a * 128
-    image[:, :, 2] = b * 128
+    image[:, :, 1] = a
+    image[:, :, 2] = b
 
     return image
 
 # LAB-Farbraum normalisieren
-def normalize_lab(lab_image):
+# def normalize_lab(lab_image):
     # L-Kanal normalisieren auf [0, 1] (0–100 wird durch 100 geteilt)
-    l_normalized = lab_image[:, :, 0] / 100.0
+    # l_normalized = lab_image[:, :, 0] / 100.0
     # a-Kanal normalisieren auf [-1, 1] ([-128, 127] wird durch 128 geteilt)
-    a_normalized = lab_image[:, :, 1] / 128.0
+    # a_normalized = lab_image[:, :, 1] / 128.0
     # b-Kanal normalisieren auf [-1, 1] ([-128, 127] wird durch 128 geteilt)
-    b_normalized = lab_image[:, :, 2] / 128.0
+    # b_normalized = lab_image[:, :, 2] / 128.0
 
     # Ergebnis zusammenfügen
-    normalized_lab = np.dstack((l_normalized, a_normalized, b_normalized))
-    normalized_lab = torch.tensor(normalized_lab, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0)
-    normalized_lab = normalized_lab.detach().cpu().numpy()
+    # normalized_lab = np.dstack((l_normalized, a_normalized, b_normalized))
+    # normalized_lab = torch.tensor(normalized_lab, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0)
+    # normalized_lab = normalized_lab.detach().cpu().numpy()
     # print(f"numpy array shape: {input_tensor.shape}")
 
-    print(f"Normalized LAB shape: {normalized_lab.shape}")
-    if len(normalized_lab.shape) != 3 or normalized_lab.shape[2] != 3:
-        raise ValueError(f"Inconsistent LAB shape after normalization: {normalized_lab.shape}")
-
-    return normalized_lab
+    # print(f"Normalized LAB shape: {normalized_lab.shape}")
+    # if len(normalized_lab.shape) != 3 or normalized_lab.shape[2] != 3:
+        # raise ValueError(f"Inconsistent LAB shape after normalization: {normalized_lab.shape}")
+    # return normalized_lab
 
 
 # rebuild the original image with the predicted colors of the network
@@ -106,10 +112,7 @@ def rebuild_image(
             print(f"Error: Invalid image from function for {image_name}")
             continue
 
-        plt.imshow(pred_image, cmap='gray')
-        plt.axis('off')
-        plt.title("Reconstructed Image")
-        plt.show()
+        show_image(pred_image)
 
         # Resize predicted image to match the original image size (original_width, original_height)
         pred_image_resized = cv2.resize(pred_image, (original_width, original_height), interpolation=cv2.INTER_LINEAR)
@@ -117,6 +120,7 @@ def rebuild_image(
         # print(f"Original image size: {image.shape}")
         # print(f"Predicted image size after resize: {pred_image_resized.shape}")
 
+        show_image(pred_image_resized)
         if current_row is None:
             try:
                 current_row = np.hstack((current_row, pred_image_resized))
@@ -147,5 +151,5 @@ def rebuild_image(
     cv2.imwrite(output_file, canvas)
     print(f"Reconstructed image saved to {output_file}")
 
-rebuild_image("prediction_cat", conv_model, create_image_from_predictions, output_file="reconstructed_image_cat.jpg")
+rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\prediction_cat", conv_model, create_image_from_predictions, output_file="reconstructed_image_cat.jpg")
 

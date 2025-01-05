@@ -12,7 +12,7 @@ class ConvModel(nn.Module):
         self.filter_size = 3 # -> 6 conv layers
         
         # convolution 1
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=8, kernel_size=self.filter_size)
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=8, kernel_size=self.filter_size)
 
         # convolution 2
         self.conv2 = nn.Conv2d(in_channels=8, out_channels=16, kernel_size=self.filter_size)

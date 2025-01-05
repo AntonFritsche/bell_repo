@@ -41,7 +41,7 @@ optimizer = torch.optim.Adam(conv_model.parameters(), lr=0.001)
 
 def target_transform(target):
     target = torch.tensor(target, dtype=torch.float32)
-    normalized_label  = target / 128
+    normalized_label  = torch.div(target, 128) # rescale target to the range (-1; 1) for better data handling for the model
     return normalized_label
 
 
