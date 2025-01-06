@@ -42,7 +42,7 @@ def target_transform_func(target):
     return normalized_label
 
 class ABSectionDataset(Dataset):
-    def __init__(self, csv_file, image_dir_param, transform_func=None, target_transform_func=None):
+    def __init__(self, csv_file, image_dir_param, transform_func=None, target_transform_param=None):
         self.data = pd.read_csv(csv_file)
         self.image_dir = image_dir
         self.transform = transform
@@ -68,7 +68,7 @@ class ABSectionDataset(Dataset):
         return image, label
 
 # Transformation
-transform = transforms.Compose([
+#transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.5], std=[0.5])
 ])
@@ -78,7 +78,7 @@ data = pd.read_csv(csv_path)
 
 image_dir = r"E:\Programmierung\Datein\Python\bell_repo\conv-network\train"
 
-dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, transform_func=transform)
+dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, transform_func=None, target_transform_param q=target_transform_func)
 
 # print(dataset)
 
