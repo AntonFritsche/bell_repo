@@ -50,7 +50,7 @@ conv_network_folder = "../conv-network"
 # create_datasets(source_folder, conv_network_folder)
 
 def convert_images_to_grayscale(folder_path):
-    max_images = 10000
+    max_images = 15000
     image_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
     image_files.sort(key=lambda x: extract_numbers(os.path.basename(x)))
     image_files = image_files[:max_images]
@@ -66,22 +66,17 @@ def convert_images_to_grayscale(folder_path):
             print(f"Fehler beim Konvertieren von {image_path}: {e}")
 
 greyscale_folder = "./train"
-convert_images_to_grayscale(greyscale_folder)
+# convert_images_to_grayscale(greyscale_folder)
 
 def convert_images_to_lab(folder_path):
     images = [os.path.join(folder_path, img) for img in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, img))]
 
     images.sort(key=lambda x: extract_numbers(os.path.basename(x)))
-    images = images[:10000]
+    images = images[:15000]
     print(images[:5])
 
     for image_path in images:
         try:
-            img = Image.open(image_path)
-
-            img_color = img.convert("RGB")
-            img_color.save(image_path)
-
             img_bgr = cv2.imread(image_path)
             if img_bgr is None:
                 print(f"Bild {image_path} konnte nicht geladen werden. Überspringen...")
@@ -284,7 +279,7 @@ def process_all_images(image_dir, csv_path, section_size=13, overlap=1):
         csv_writer = csv.writer(csv_file)
 
         images = os.listdir(image_dir)
-        images = images[:10000]
+        images = images[:15000]
         for image_name in images:
             if image_name.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
                 image_path = os.path.join(image_dir, image_name)
@@ -367,7 +362,7 @@ def rename_png_files(directory):
 # rename_png_files(r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train")
 
 def create_csv_train(csv_path, train_dir):
-    max_images = 10000
+    max_images = 15000
     image_files = [f for f in os.listdir(train_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
     image_files = image_files[:max_images]
     image_files.sort(key=lambda x: extract_numbers(os.path.basename(x)))
@@ -375,7 +370,7 @@ def create_csv_train(csv_path, train_dir):
     with open(csv_path, mode='w', newline='') as csv_file:
         csv_writer = csv.writer(csv_file)
 
-        csv_writer.writerow(['image_name', 'label'])
+        csv_writer.writerow(['image_name', 'label_a', 'label_b'])
 
         for image_name in image_files:
             image_path = os.path.join(train_dir, image_name)

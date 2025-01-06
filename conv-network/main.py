@@ -31,14 +31,14 @@ print("output_size: ", params[0].size(), "\n")
 # print("x_prediction: ", (conv_model(x)))
 
 # Loss function
-loss_fn = nn.L1Loss()
+loss_fn = nn.MSELoss()
 
 # Optimizers specified in the torch.optim package
 optimizer = torch.optim.Adam(conv_model.parameters(), lr=0.001)
 
 def target_transform_func(target):
     target = torch.tensor(target, dtype=torch.float32)
-    normalized_label  = torch.div(target, 128) # rescale target to the range (-1; 1) for better data handling for the model
+    normalized_label  = torch.div(target, 100) # rescale target to the range (-1; 1) for better data handling for the model
     return normalized_label
 
 class ABSectionDataset(Dataset):
@@ -55,7 +55,10 @@ class ABSectionDataset(Dataset):
         img_path = os.path.join(self.image_dir, self.data.iloc[idx, 0])
         
         image = Image.open(img_path)
-        
+
+        if image.mode != "L":
+            image = image.convert("L")
+
         label = self.data.iloc[idx, 1:3].values.astype(np.float32)
         
         if self.transform:
@@ -79,7 +82,7 @@ dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, transfo
 
 # print(dataset)
 
-subset_indices = list(range(10000))
+subset_indices = list(range(14999))
 subset = Subset(dataset, subset_indices)
 
 train_size = int(0.9 * len(subset))
@@ -87,10 +90,10 @@ val_size = len(subset) - train_size
 
 train_dataset, val_dataset = random_split(subset, [train_size, val_size])
 
-train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=128, shuffle=False)
 
-num_epochs = 20
+num_epochs = 30
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 conv_model.to(device)
 
@@ -101,8 +104,9 @@ for epoch in range(num_epochs):
         images, targets = images.to(device), targets.to(device)
         # print(f"images.shape: {images.shape}")
         # Forward pass
+
         outputs = conv_model(images)
-        rescaled_outputs = torch.mul(outputs, 100) # scale the outputs back to lab color space
+        rescaled_outputs = torch.mul(outputs, 128) # scale the outputs back to lab color space
 
         loss = loss_fn(rescaled_outputs, targets)
 
@@ -126,7 +130,7 @@ for epoch in range(num_epochs):
             outputs = conv_model(images)
 
             rescaled_outputs_loss = torch.mul(outputs, 128) # scale the outputs back to lab color space
-            loss = loss_fn(outputs, targets)
+            loss = loss_fn(rescaled_outputs_loss, targets)
             val_loss += loss.item()
     print(f"Validation Loss: {val_loss/len(val_loader):.4f}")
 
