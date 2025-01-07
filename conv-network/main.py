@@ -31,7 +31,8 @@ print("output_size: ", params[0].size(), "\n")
 # print("x_prediction: ", (conv_model(x)))
 
 # Loss function
-loss_fn = nn.MSELoss()
+loss_fn = nn.MSELoss() # Mean Squared Error: error is squared
+# loss_fn = nn.L1Loss() # Mean Absolute Error: error is just absolute
 
 # Optimizers specified in the torch.optim package
 optimizer = torch.optim.Adam(conv_model.parameters(), lr=0.001)
