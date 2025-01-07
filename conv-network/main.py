@@ -1,5 +1,4 @@
 import os
-
 import numpy as np
 import pandas as pd
 import torch as torch
@@ -9,6 +8,7 @@ from torch.utils.data import DataLoader, random_split
 from torch.utils.data import Dataset
 from torch.utils.data import Subset
 from torchvision import transforms
+import time
 
 import model
 
@@ -38,7 +38,7 @@ optimizer = torch.optim.Adam(conv_model.parameters(), lr=0.001)
 
 def target_transform_func(target):
     target = torch.tensor(target, dtype=torch.float32)
-    normalized_label  = torch.div(target, 100) # rescale target to the range (-1; 1) for better data handling for the model
+    normalized_label  = torch.div(target, 128) # rescale target to the range (-1; 1) for better data handling for the model
     return normalized_label
 
 class ABSectionDataset(Dataset):
@@ -68,7 +68,7 @@ class ABSectionDataset(Dataset):
         return image, label
 
 # Transformation
-#transform = transforms.Compose([
+transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.5], std=[0.5])
 ])
@@ -78,7 +78,7 @@ data = pd.read_csv(csv_path)
 
 image_dir = r"E:\Programmierung\Datein\Python\bell_repo\conv-network\train"
 
-dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, transform_func=None, target_transform_param q=target_transform_func)
+dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, transform_func=None, target_transform_param=target_transform_func)
 
 # print(dataset)
 
@@ -93,22 +93,26 @@ train_dataset, val_dataset = random_split(subset, [train_size, val_size])
 train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=128, shuffle=False)
 
-num_epochs = 30
+num_epochs = 50
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 conv_model.to(device)
+start_time = time.time()
 
 for epoch in range(num_epochs):
+    epoch_time = time.time()
     conv_model.train()
     running_loss = 0.0
     for images, targets in train_loader:
         images, targets = images.to(device), targets.to(device)
         # print(f"images.shape: {images.shape}")
         # Forward pass
-
+        # print(images[:1][:1])
         outputs = conv_model(images)
-        rescaled_outputs = torch.mul(outputs, 128) # scale the outputs back to lab color space
 
-        loss = loss_fn(rescaled_outputs, targets)
+        rescaled_outputs = torch.mul(outputs, 128) # scale the outputs back to lab color space
+        rescaled_targets = torch.mul(targets, 128)
+
+        loss = loss_fn(rescaled_outputs, rescaled_targets)
 
         # Backward pass and optimization
         optimizer.zero_grad()
@@ -118,7 +122,9 @@ for epoch in range(num_epochs):
         running_loss += loss.item()
 
     # noinspection PyUnboundLocalVariable
-    print(f"predicted outputs: {rescaled_outputs[:1]}")
+    print(f"rescaled targets: {rescaled_targets[:1]}")
+    # noinspection PyUnboundLocalVariable
+    print(f"rescaled outputs: {rescaled_outputs[:1]}")
     print(f"Epoch {epoch+1}/{num_epochs}, Loss: {running_loss/len(train_loader):.4f}")
 
     # Validation (optional)
@@ -130,9 +136,15 @@ for epoch in range(num_epochs):
             outputs = conv_model(images)
 
             rescaled_outputs_loss = torch.mul(outputs, 128) # scale the outputs back to lab color space
-            loss = loss_fn(rescaled_outputs_loss, targets)
+            rescaled_targets_loss = torch.mul(targets, 128)
+
+            loss = loss_fn(rescaled_outputs_loss, rescaled_targets_loss)
             val_loss += loss.item()
     print(f"Validation Loss: {val_loss/len(val_loader):.4f}")
-
+    print(f"Epoch time: {time.time() - epoch_time:.2f} seconds")
+    print("\n")
+elapsed_time = time.time() - start_time
+# noinspection PyUnboundLocalVariable
+print(f"Training time: {elapsed_time:.2f} seconds")
 model_path = r"E:\Programmierung\Datein\Python\bell_repo\conv-network\saved-models\conv_model_2.pth"
 torch.save(conv_model.state_dict(), model_path)
