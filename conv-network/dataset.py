@@ -279,7 +279,7 @@ def process_all_images(image_dir, csv_path, section_size=13, overlap=1):
         csv_writer = csv.writer(csv_file)
 
         images = os.listdir(image_dir)
-        images = images[:15000]
+        images = images[:25000]
         for image_name in images:
             if image_name.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
                 image_path = os.path.join(image_dir, image_name)
@@ -362,10 +362,10 @@ def rename_png_files(directory):
 # rename_png_files(r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train")
 
 def create_csv_train(csv_path, train_dir):
-    max_images = 15000
+    max_images = 25000
     image_files = [f for f in os.listdir(train_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
-    image_files = image_files[:max_images]
     image_files.sort(key=lambda x: extract_numbers(os.path.basename(x)))
+    image_files = image_files[:max_images]
 
     with open(csv_path, mode='w', newline='') as csv_file:
         csv_writer = csv.writer(csv_file)

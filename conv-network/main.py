@@ -83,7 +83,7 @@ dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, transfo
 
 # print(dataset)
 
-subset_indices = list(range(14999))
+subset_indices = list(range(24999))
 subset = Subset(dataset, subset_indices)
 
 train_size = int(0.9 * len(subset))
@@ -91,8 +91,8 @@ val_size = len(subset) - train_size
 
 train_dataset, val_dataset = random_split(subset, [train_size, val_size])
 
-train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=128, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=8, shuffle=False)
 
 num_epochs = 50
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -123,9 +123,9 @@ for epoch in range(num_epochs):
         running_loss += loss.item()
 
     # noinspection PyUnboundLocalVariable
-    print(f"rescaled targets: {rescaled_targets[:1]}")
+    print(f"rescaled targets: {[round(val, 4) for val in rescaled_targets[0].tolist()]}")
     # noinspection PyUnboundLocalVariable
-    print(f"rescaled outputs: {rescaled_outputs[:1]}")
+    print(f"rescaled outputs: {[round(val, 4) for val in rescaled_outputs[0].tolist()]}")
     print(f"Epoch {epoch+1}/{num_epochs}, Loss: {running_loss/len(train_loader):.4f}")
 
     # Validation (optional)
