@@ -19,7 +19,7 @@ import cv2
 import os
 import matplotlib.pyplot as plt
 
-model_path = r"E:\Programmierung\Datein\Python\bell_repo\conv-network\saved-models\conv_model_2.pth"
+model_path = r"/conv-network/saved-models/conv_model_leakyReLU.pth"
 conv_model = model.ConvModel()
 conv_model.load_state_dict(torch.load(model_path, weights_only=True))
 
