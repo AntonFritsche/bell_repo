@@ -45,9 +45,9 @@ def target_transform_func(target):
 class ABSectionDataset(Dataset):
     def __init__(self, csv_file, image_dir_param, transform_func=None, target_transform_param=None):
         self.data = pd.read_csv(csv_file)
-        self.image_dir = image_dir
-        self.transform = transform
-        self.target_transform = target_transform_func
+        self.image_dir = image_dir_param
+        self.transform = transform_func
+        self.target_transform = target_transform_param
 
     def __len__(self):
         return len(self.data)
@@ -98,12 +98,15 @@ num_epochs = 50
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 conv_model.to(device)
 start_time = time.time()
+training_loss_ot = [] # list for training loss over time
+validation_loss_ot = [] # list for validation loss over time
 
 for epoch in range(num_epochs):
     epoch_time = time.time()
     conv_model.train()
     running_loss = 0.0
     for images, targets in train_loader:
+        # noinspection DuplicatedCode
         images, targets = images.to(device), targets.to(device)
         # print(f"images.shape: {images.shape}")
         # Forward pass
@@ -114,7 +117,7 @@ for epoch in range(num_epochs):
         rescaled_targets = torch.mul(targets, 128)
 
         loss = loss_fn(rescaled_outputs, rescaled_targets)
-
+        training_loss_ot.append(loss.item()) # loss.item() returns the value of tensor as Python number
         # Backward pass and optimization
         optimizer.zero_grad()
         loss.backward()
@@ -133,6 +136,7 @@ for epoch in range(num_epochs):
     val_loss = 0.0
     with torch.no_grad():
         for images, targets in val_loader:
+            # noinspection DuplicatedCode
             images, targets = images.to(device), targets.to(device)
             outputs = conv_model(images)
 
@@ -140,6 +144,7 @@ for epoch in range(num_epochs):
             rescaled_targets_loss = torch.mul(targets, 128)
 
             loss = loss_fn(rescaled_outputs_loss, rescaled_targets_loss)
+            validation_loss_ot.append(loss.item())  # loss.item() returns the value of tensor as Python number
             val_loss += loss.item()
     print(f"Validation Loss: {val_loss/len(val_loader):.4f}")
     print(f"Epoch time: {time.time() - epoch_time:.2f} seconds")
