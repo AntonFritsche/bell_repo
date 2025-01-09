@@ -152,5 +152,5 @@ for epoch in range(num_epochs):
 elapsed_time = time.time() - start_time
 # noinspection PyUnboundLocalVariable
 print(f"Training time: {elapsed_time:.2f} seconds")
-model_path = r"saved-models/conv_model_relu.pth"
+model_path = r"saved-models/conv_model.pth"
 torch.save(conv_model.state_dict(), model_path)
