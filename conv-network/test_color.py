@@ -19,32 +19,32 @@ import cv2
 import os
 import matplotlib.pyplot as plt
 
-model_path = r"/conv-network/saved-models/conv_model_leakyReLU.pth"
+model_path = r"saved-models/conv_model_leakyReLU.pth"
 conv_model = model.ConvModel()
 conv_model.load_state_dict(torch.load(model_path, weights_only=True))
 
-def show_image(image):
-    plt.imshow(image, cmap='gray')
+def show_image(input_image):
+    plt.imshow(input_image, cmap='gray')
     plt.axis('off')
     plt.title("Reconstructed Image")
     plt.show()
 
 # creates an LAB image from the predictions of the model and returns it
 def create_image_from_predictions(input_image, prediction):
-    prediction_rescaled = np.divide(prediction, 128) # scale the outputs back to lab color space
+    prediction_rescaled = np.multiply(prediction, 128) # scale the outputs back to lab color space
     a, b = prediction_rescaled
 
     height, width = 13, 13
     lab_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2Lab)
     l_channel, _, _ = cv2.split(lab_image)
 
-    image = np.zeros((height, width, 3), np.uint8)
+    image_pred = np.zeros((height, width, 3), np.uint8)
 
-    image[:, :, 0] = l_channel
-    image[:, :, 1] = a
-    image[:, :, 2] = b
+    image_pred[:, :, 0] = l_channel
+    image_pred[:, :, 1] = a
+    image_pred[:, :, 2] = b
 
-    return image
+    return image_pred
 
 # LAB-Farbraum normalisieren
 # def normalize_lab(lab_image):
@@ -151,5 +151,12 @@ def rebuild_image(
     cv2.imwrite(output_file, canvas)
     print(f"Reconstructed image saved to {output_file}")
 
-rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\prediction_cat", conv_model, create_image_from_predictions, output_file="reconstructed_image_cat.jpg")
+# rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\prediction_cat", conv_model, create_image_from_predictions, output_file="reconstructed_image_cat.jpg")
+
+# test image creation function
+image_path_test = "./train/sektion_0_0.png"
+image_test = cv2.imread(image_path_test)
+image_test = cv2.cvtColor(image_test, cv2.COLOR_BGR2LAB)
+image_test_pred = create_image_from_predictions(image_test, [100, 100])
+show_image(image_test_pred)
 
