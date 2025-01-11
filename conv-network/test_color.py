@@ -73,7 +73,7 @@ def rebuild_image(
         image_to_predict: str,
         model_param: callable,
         create_image_from_predictions_func: callable,
-        output_file: str = "reconstructed_image.jpg"
+        output_file: str
 ) -> None:
     images_per_row = 487
     row_count = 0
@@ -85,63 +85,68 @@ def rebuild_image(
     image_files.sort(key=lambda x: extract_numbers(os.path.basename(x)))
 
     for image_name in image_files:
-        image_path = os.path.join(image_to_predict, image_name)
-        image = cv2.imread(image_path)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+        if not os.path.isfile("reconstructed_image.png"):
+            image_path = os.path.join(image_to_predict, image_name)
+            image = cv2.imread(image_path)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
 
-        original_height, original_width = image.shape[:2]
-        print(f"Original image shape: {image.shape}")
+            original_height, original_width = image.shape[:2]
+            print(f"Original image shape: {image.shape}")
 
-        input_tensor = torch.tensor(image, dtype=torch.float32) # right input dimension for the model
-        print(f"input tensor shape: {input_tensor.shape}") # shape: [1, 3, 13, 13]
+            input_tensor = torch.tensor(image, dtype=torch.float32) # right input dimension for the model
+            print(f"input tensor shape: {input_tensor.shape}") # shape: [1, 3, 13, 13]
 
-        with torch.no_grad():
-            output = model_param(input_tensor)
-            if output is None or output.numel() == 0:
-                print(f"Error: Model provided no output for {image_name}")
-                continue
-        print(f"output tensor shape: {output.shape}")
-        scaled_output = torch.mul(output, 128) # scale the outputs back to lab color space
-        print(scaled_output[:1])
+            with torch.no_grad():
+                output = model_param(input_tensor)
+                if output is None or output.numel() == 0:
+                    print(f"Error: Model provided no output for {image_name}")
+                    continue
+            print(f"output tensor shape: {output.shape}")
+            scaled_output = torch.mul(output, 128) # scale the outputs back to lab color space
+            print(scaled_output[:1])
 
-        pred_image = create_image_from_predictions_func(image, output.squeeze(0).cpu().numpy())
-        show_image(pred_image)
+            pred_image = create_image_from_predictions_func(image, output.squeeze(0).cpu().numpy())
+            show_image(pred_image)
 
-        # Resize predicted image to match the original image size (original_width, original_height)
-        pred_image_resized = cv2.resize(pred_image, (original_width, original_height), interpolation=cv2.INTER_LINEAR)
+            # Resize predicted image to match the original image size (original_width, original_height)
+            pred_image_resized = cv2.resize(pred_image, (original_width, original_height), interpolation=cv2.INTER_LINEAR)
 
-        show_image(pred_image_resized)
-        if current_row is None:
-            try:
-                current_row = np.hstack((current_row, pred_image_resized))
-            except ValueError as e:
-                print(f"Error merging images at index {idx}: {e}")
-                break
+            # show_image(pred_image_resized)
+            cv2.imwrite(os.path.join(temp_folder, image_name), pred_image_resized)
         else:
-            current_row = np.hstack((current_row, pred_image_resized))
+            image_path = os.path.join(image_to_predict, image_name)
+            image = cv2.imread(image_path)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
 
-        print(f"Processed image {idx + 1}/{len(os.listdir(image_folder))}: {image_name}")
+            original_height, original_width = image.shape[:2]
+            print(f"Original image shape: {image.shape}")
 
-        if (idx + 1) % images_per_row == 0:
-            if canvas is None:
-                canvas = current_row
-            else:
-                canvas = np.vstack((canvas, current_row))
+            input_tensor = torch.tensor(image, dtype=torch.float32)  # right input dimension for the model
+            print(f"input tensor shape: {input_tensor.shape}")  # shape: [1, 3, 13, 13]
 
-            current_row = None
-            row_count += 1
-            print(f"Completed row {row_count}...")
+            with torch.no_grad():
+                output = model_param(input_tensor)
+                if output is None or output.numel() == 0:
+                    print(f"Error: Model provided no output for {image_name}")
+                    continue
+            print(f"output tensor shape: {output.shape}")
+            scaled_output = torch.mul(output, 128)  # scale the outputs back to lab color space
+            print(scaled_output[:1])
 
-    if current_row is not None:
-        if canvas is None:
-            canvas = current_row
-        else:
-            canvas = np.vstack((canvas, current_row))
+            pred_image = create_image_from_predictions_func(image, output.squeeze(0).cpu().numpy())
+            show_image(pred_image)
 
-    cv2.imwrite(output_file, canvas)
+            # Resize predicted image to match the original image size (original_width, original_height)
+            pred_image_resized = cv2.resize(pred_image, (original_width, original_height),
+                                            interpolation=cv2.INTER_LINEAR)
+
+            # show_image(pred_image_resized)
+            cv2.imwrite(os.path.join(temp_folder, image_name), pred_image_resized)
+
+
     print(f"Reconstructed image saved to {output_file}")
 
-rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\prediction_cat", conv_model, create_image_from_predictions, output_file="reconstructed_image_cat.jpg")
+rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\prediction_cat", conv_model, create_image_from_predictions, output_file="reconstructed_image.png")
 
 # test image creation function
 # image_path_test = "./train/sektion_0_0.png"
