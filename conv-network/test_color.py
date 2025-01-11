@@ -18,10 +18,11 @@ import model
 import cv2
 import os
 import matplotlib.pyplot as plt
+from dataset import extract_numbers
+from dataset import preprocess_image
 
 model_path = r"saved-models/conv_model_leakyReLU.pth"
-conv_model = model.ConvModel()
-conv_model.load_state_dict(torch.load(model_path, weights_only=True))
+conv_model = torch.load(model_path, weights_only=False)
 
 def show_image(input_image):
     plt.imshow(input_image, cmap='gray')
@@ -69,56 +70,45 @@ def create_image_from_predictions(input_image, prediction):
 
 # rebuild the original image with the predicted colors of the network
 def rebuild_image(
-        image_folder: str,
+        image_to_predict: str,
         model_param: callable,
         create_image_from_predictions_func: callable,
         output_file: str = "reconstructed_image.jpg"
 ) -> None:
-    canvas = None
-    current_row = None
     images_per_row = 487
     row_count = 0
 
-    for idx, image_name in enumerate(os.listdir(image_folder)):
-        image_path = os.path.join(image_folder, image_name)
+    temp_folder = "temp_folder"
+    preprocess_image(temp_folder, image_to_predict)
+
+    image_files = [f for f in os.listdir(temp_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
+    image_files.sort(key=lambda x: extract_numbers(os.path.basename(x)))
+
+    for image_name in image_files:
+        image_path = os.path.join(image_to_predict, image_name)
         image = cv2.imread(image_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
 
         original_height, original_width = image.shape[:2]
+        print(f"Original image shape: {image.shape}")
 
-        input_tensor = torch.tensor(image, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0) # right input dimension for the model
-        # print(f"Input tensor shape: {input_tensor.shape}")
-        print(f"first input tensor shape: {input_tensor.shape}") # shape: [1, 3, 13, 13]
-        # input_tensor = normalize_lab(input_tensor)
-        # print(f"Normalized LAB image shape: {input_tensor.shape}")
-        input_tensor = input_tensor.clone().detach().float()
-        print(f"second input tensor shape: {input_tensor.shape}") # shape: [1, 3, 13, 13]
+        input_tensor = torch.tensor(image, dtype=torch.float32) # right input dimension for the model
+        print(f"input tensor shape: {input_tensor.shape}") # shape: [1, 3, 13, 13]
 
         with torch.no_grad():
             output = model_param(input_tensor)
             if output is None or output.numel() == 0:
                 print(f"Error: Model provided no output for {image_name}")
                 continue
-
+        print(f"output tensor shape: {output.shape}")
         scaled_output = torch.mul(output, 128) # scale the outputs back to lab color space
-        print(scaled_output)
-        if output is None or torch.isnan(scaled_output).any():
-            print(f"Error: Invalid output from the model for {image_name}")
-            continue
+        print(scaled_output[:1])
 
         pred_image = create_image_from_predictions_func(image, output.squeeze(0).cpu().numpy())
-        print(f"third input tensor shape: {input_tensor.shape}") # shape: [1, 3, 13, 13]
-        if pred_image is None:
-            print(f"Error: Invalid image from function for {image_name}")
-            continue
-
         show_image(pred_image)
 
         # Resize predicted image to match the original image size (original_width, original_height)
         pred_image_resized = cv2.resize(pred_image, (original_width, original_height), interpolation=cv2.INTER_LINEAR)
-        print(f"fourth input tensor shape: {input_tensor.shape}") # shape: [1, 3, 13, 13]
-        # print(f"Original image size: {image.shape}")
-        # print(f"Predicted image size after resize: {pred_image_resized.shape}")
 
         show_image(pred_image_resized)
         if current_row is None:
@@ -151,12 +141,12 @@ def rebuild_image(
     cv2.imwrite(output_file, canvas)
     print(f"Reconstructed image saved to {output_file}")
 
-# rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\prediction_cat", conv_model, create_image_from_predictions, output_file="reconstructed_image_cat.jpg")
+rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\prediction_cat", conv_model, create_image_from_predictions, output_file="reconstructed_image_cat.jpg")
 
 # test image creation function
-image_path_test = "./train/sektion_0_0.png"
-image_test = cv2.imread(image_path_test)
-image_test = cv2.cvtColor(image_test, cv2.COLOR_BGR2LAB)
-image_test_pred = create_image_from_predictions(image_test, [100, 100])
-show_image(image_test_pred)
+# image_path_test = "./train/sektion_0_0.png"
+# image_test = cv2.imread(image_path_test)
+# image_test = cv2.cvtColor(image_test, cv2.COLOR_BGR2LAB)
+# image_test_pred = create_image_from_predictions(image_test, [100, 100])
+# show_image(image_test_pred)
 
