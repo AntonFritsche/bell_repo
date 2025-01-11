@@ -14,7 +14,6 @@
 # from dataset import preprocess_image
 import numpy as np
 import torch as torch
-import model
 import cv2
 import os
 import matplotlib.pyplot as plt
@@ -69,14 +68,13 @@ def create_image_from_predictions(input_image, prediction):
 
 
 # rebuild the original image with the predicted colors of the network
+# noinspection DuplicatedCode
 def rebuild_image(
         image_to_predict: str,
         model_param: callable,
         create_image_from_predictions_func: callable,
         output_file: str
 ) -> None:
-    images_per_row = 487
-    row_count = 0
 
     temp_folder = "temp_folder"
     preprocess_image(temp_folder, image_to_predict)
@@ -86,7 +84,7 @@ def rebuild_image(
 
     for image_name in image_files:
         if not os.path.isfile("reconstructed_image.png"):
-            image_path = os.path.join(image_to_predict, image_name)
+            image_path = os.path.join(temp_folder, image_name)
             image = cv2.imread(image_path)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
 
@@ -112,9 +110,9 @@ def rebuild_image(
             pred_image_resized = cv2.resize(pred_image, (original_width, original_height), interpolation=cv2.INTER_LINEAR)
 
             # show_image(pred_image_resized)
-            cv2.imwrite(os.path.join(temp_folder, image_name), pred_image_resized)
+            cv2.imwrite(temp_folder, pred_image_resized)
         else:
-            image_path = os.path.join(image_to_predict, image_name)
+            image_path = os.path.join(temp_folder, "reconstructed_image.png")
             image = cv2.imread(image_path)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
 
@@ -141,6 +139,7 @@ def rebuild_image(
                                             interpolation=cv2.INTER_LINEAR)
 
             # show_image(pred_image_resized)
+
             cv2.imwrite(os.path.join(temp_folder, image_name), pred_image_resized)
 
 
