@@ -98,15 +98,28 @@ def rebuild_image(
             image_row = cv2.imread(f"temp_folder_rows/row_{index - 1}.png")
             row_new = cv2.imread(f"temp_folder_rows/row_{index}.png")
 
-            image_row = cv2.hconcat([image_row, row_new])
+            overlap_pixel1 = image_row[:, -1:, :]
+            overlap_pixel2 = row_new[:, :1, :]
+            average_overlap = (overlap_pixel1.astype(np.float32) + overlap_pixel2.astype(np.float32)) // 2
+            average_overlap = average_overlap.astype(np.uint8)
+
+            image_row = cv2.hconcat([image_row[:, :-1], average_overlap, row_new[:, 1:]])
+
             cv2.imwrite(f"temp_folder_rows/image.png", image_row)
-            # os.remove(f"temp_folder_rows/row_{index}.png")
+            os.remove(f"temp_folder_rows/row_{index}.png")
         else:
             image_row = cv2.imread(f"temp_folder_rows/image.png")
             row_new = cv2.imread(f"temp_folder_rows/row_{index}.png")
 
+            overlap_pixel1 = image_row[:, -1:, :]
+            overlap_pixel2 = row_new[:, :1, :]
+            average_overlap = (overlap_pixel1.astype(np.float32) + overlap_pixel2.astype(np.float32)) // 2
+            average_overlap = average_overlap.astype(np.uint8)
+
+            image_row = cv2.hconcat([image_row[:, :-1], average_overlap, row_new[:, 1:]])
+
             cv2.imwrite(f"temp_folder_rows/image.png", cv2.hconcat([image_row, row_new]))
-            # os.remove(f"temp_folder_rows/row_{index}.png")
+            os.remove(f"temp_folder_rows/row_{index}.png")
 
 
 
