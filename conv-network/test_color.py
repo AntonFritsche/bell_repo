@@ -46,27 +46,6 @@ def create_image_from_predictions(input_image, prediction):
 
     return image_pred
 
-# LAB-Farbraum normalisieren
-# def normalize_lab(lab_image):
-    # L-Kanal normalisieren auf [0, 1] (0–100 wird durch 100 geteilt)
-    # l_normalized = lab_image[:, :, 0] / 100.0
-    # a-Kanal normalisieren auf [-1, 1] ([-128, 127] wird durch 128 geteilt)
-    # a_normalized = lab_image[:, :, 1] / 128.0
-    # b-Kanal normalisieren auf [-1, 1] ([-128, 127] wird durch 128 geteilt)
-    # b_normalized = lab_image[:, :, 2] / 128.0
-
-    # Ergebnis zusammenfügen
-    # normalized_lab = np.dstack((l_normalized, a_normalized, b_normalized))
-    # normalized_lab = torch.tensor(normalized_lab, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0)
-    # normalized_lab = normalized_lab.detach().cpu().numpy()
-    # print(f"numpy array shape: {input_tensor.shape}")
-
-    # print(f"Normalized LAB shape: {normalized_lab.shape}")
-    # if len(normalized_lab.shape) != 3 or normalized_lab.shape[2] != 3:
-        # raise ValueError(f"Inconsistent LAB shape after normalization: {normalized_lab.shape}")
-    # return normalized_lab
-
-
 # rebuild the original image with the predicted colors of the network
 # noinspection DuplicatedCode
 def rebuild_image(
@@ -76,76 +55,35 @@ def rebuild_image(
         output_file: str
 ) -> None:
 
-    temp_folder = "temp_folder"
-    preprocess_image(temp_folder, image_to_predict)
+    temp_folder_images = "temp_folder_images"
+    temp_folder_rows = "temp_folder_rows"
 
-    image_files = [f for f in os.listdir(temp_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
-    image_files.sort(key=lambda x: extract_numbers(os.path.basename(x)))
+    if not os.path.exists(temp_folder_images):
+        os.makedirs(temp_folder_images)
+    if not os.path.exists(temp_folder_rows):
+        os.makedirs(temp_folder_rows)
 
-    for image_name in image_files:
-        if not os.path.isfile("reconstructed_image.png"):
-            image_path = os.path.join(temp_folder, image_name)
-            image = cv2.imread(image_path)
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    # use preprocess function to slice image into all 13x13 pixel image spaces
+    preprocess_image(temp_folder_images, image_to_predict)
 
-            original_height, original_width = image.shape[:2]
-            print(f"Original image shape: {image.shape}")
+    list_rows =  [torch.arange(0, 488)] # a number for each row in the input image
 
-            input_tensor = torch.tensor(image, dtype=torch.float32) # right input dimension for the model
-            print(f"input tensor shape: {input_tensor.shape}") # shape: [1, 3, 13, 13]
+    for i in list_rows:
+        idx = i
 
-            with torch.no_grad():
-                output = model_param(input_tensor)
-                if output is None or output.numel() == 0:
-                    print(f"Error: Model provided no output for {image_name}")
-                    continue
-            print(f"output tensor shape: {output.shape}")
-            scaled_output = torch.mul(output, 128) # scale the outputs back to lab color space
-            print(scaled_output[:1])
+        image_files = [f for f in os.listdir(temp_folder_images) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
+        image_files.sort(key=lambda x: extract_numbers(os.path.basename(x)))
+        image_files = image_files[idx * 487:]
 
-            pred_image = create_image_from_predictions_func(image, output.squeeze(0).cpu().numpy())
-            show_image(pred_image)
 
-            # Resize predicted image to match the original image size (original_width, original_height)
-            pred_image_resized = cv2.resize(pred_image, (original_width, original_height), interpolation=cv2.INTER_LINEAR)
 
-            # show_image(pred_image_resized)
-            cv2.imwrite(temp_folder, pred_image_resized)
-        else:
-            image_path = os.path.join(temp_folder, "reconstructed_image.png")
-            image = cv2.imread(image_path)
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
 
-            original_height, original_width = image.shape[:2]
-            print(f"Original image shape: {image.shape}")
 
-            input_tensor = torch.tensor(image, dtype=torch.float32)  # right input dimension for the model
-            print(f"input tensor shape: {input_tensor.shape}")  # shape: [1, 3, 13, 13]
-
-            with torch.no_grad():
-                output = model_param(input_tensor)
-                if output is None or output.numel() == 0:
-                    print(f"Error: Model provided no output for {image_name}")
-                    continue
-            print(f"output tensor shape: {output.shape}")
-            scaled_output = torch.mul(output, 128)  # scale the outputs back to lab color space
-            print(scaled_output[:1])
-
-            pred_image = create_image_from_predictions_func(image, output.squeeze(0).cpu().numpy())
-            show_image(pred_image)
-
-            # Resize predicted image to match the original image size (original_width, original_height)
-            pred_image_resized = cv2.resize(pred_image, (original_width, original_height),
-                                            interpolation=cv2.INTER_LINEAR)
-
-            # show_image(pred_image_resized)
-
-            cv2.imwrite(os.path.join(temp_folder, image_name), pred_image_resized)
 
 
     print(f"Reconstructed image saved to {output_file}")
 
-rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\prediction_cat", conv_model, create_image_from_predictions, output_file="reconstructed_image.png")
+# rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\prediction_cat", conv_model, create_image_from_predictions, output_file="reconstructed_image.png")
 
 # test image creation function
 # image_path_test = "./train/sektion_0_0.png"

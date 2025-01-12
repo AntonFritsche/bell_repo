@@ -1,0 +1,59 @@
+    for image_name in image_files:
+        if not os.path.isfile("reconstructed_image.png"):
+            image_path = os.path.join(temp_folder, image_name)
+            image = cv2.imread(image_path)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+
+            original_height, original_width = image.shape[:2]
+            print(f"Original image shape: {image.shape}")
+
+            input_tensor = torch.tensor(image, dtype=torch.float32) # right input dimension for the model
+            print(f"input tensor shape: {input_tensor.shape}") # shape: [1, 3, 13, 13]
+
+            with torch.no_grad():
+                output = model_param(input_tensor)
+                if output is None or output.numel() == 0:
+                    print(f"Error: Model provided no output for {image_name}")
+                    continue
+            print(f"output tensor shape: {output.shape}")
+            scaled_output = torch.mul(output, 128) # scale the outputs back to lab color space
+            print(scaled_output[:1])
+
+            pred_image = create_image_from_predictions_func(image, output.squeeze(0).cpu().numpy())
+            show_image(pred_image)
+
+            # Resize predicted image to match the original image size (original_width, original_height)
+            pred_image_resized = cv2.resize(pred_image, (original_width, original_height), interpolation=cv2.INTER_LINEAR)
+
+            # show_image(pred_image_resized)
+            cv2.imwrite(temp_folder, pred_image_resized)
+        else:
+            image_path = os.path.join(temp_folder, "reconstructed_image.png")
+            image = cv2.imread(image_path)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+
+            original_height, original_width = image.shape[:2]
+            print(f"Original image shape: {image.shape}")
+
+            input_tensor = torch.tensor(image, dtype=torch.float32)  # right input dimension for the model
+            print(f"input tensor shape: {input_tensor.shape}")  # shape: [1, 3, 13, 13]
+
+            with torch.no_grad():
+                output = model_param(input_tensor)
+                if output is None or output.numel() == 0:
+                    print(f"Error: Model provided no output for {image_name}")
+                    continue
+            print(f"output tensor shape: {output.shape}")
+            scaled_output = torch.mul(output, 128)  # scale the outputs back to lab color space
+            print(scaled_output[:1])
+
+            pred_image = create_image_from_predictions_func(image, output.squeeze(0).cpu().numpy())
+            show_image(pred_image)
+
+            # Resize predicted image to match the original image size (original_width, original_height)
+            pred_image_resized = cv2.resize(pred_image, (original_width, original_height),
+                                            interpolation=cv2.INTER_LINEAR)
+
+            # show_image(pred_image_resized)
+
+            cv2.imwrite(os.path.join(temp_folder, image_name), pred_image_resized)
