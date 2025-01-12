@@ -50,9 +50,7 @@ def create_image_from_predictions(input_image, prediction):
 # noinspection DuplicatedCode
 def rebuild_image(
         image_to_predict: str,
-        model_param: callable,
         create_image_from_predictions_func: callable,
-        output_file: str
 ) -> None:
 
     temp_folder_images = "temp_folder_images"
@@ -85,7 +83,13 @@ def rebuild_image(
                 cv2.imwrite(f"temp_folder_rows/row_{idx}.png", image_rebuild_pred)
             else:
                 row = cv2.imread(f"temp_folder_rows/row_{idx}.png")
-                stacked_image = cv2.hconcat([row, image_rebuild_pred])
+
+                overlap_pixel1 = row[:, -1:, :]
+                overlap_pixel2 = image_rebuild_pred[:, :1, :]
+                average_overlap = (overlap_pixel1.astype(np.float32) + overlap_pixel2.astype(np.float32)) // 2
+                average_overlap = average_overlap.astype(np.uint8)
+
+                stacked_image = cv2.hconcat([row[:, :-1], average_overlap, image_rebuild_pred[:, 1:]])
                 cv2.imwrite(f"temp_folder_rows/row_{idx}.png", stacked_image)
 
     row_files = [f for f in os.listdir(temp_folder_rows) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
@@ -98,12 +102,12 @@ def rebuild_image(
             image_row = cv2.imread(f"temp_folder_rows/row_{index - 1}.png")
             row_new = cv2.imread(f"temp_folder_rows/row_{index}.png")
 
-            overlap_pixel1 = image_row[:, -1:, :]
-            overlap_pixel2 = row_new[:, :1, :]
+            overlap_pixel1 = image_row[-1:, :, :]
+            overlap_pixel2 = row_new[:1, :, :]
             average_overlap = (overlap_pixel1.astype(np.float32) + overlap_pixel2.astype(np.float32)) // 2
             average_overlap = average_overlap.astype(np.uint8)
 
-            image_row = cv2.hconcat([image_row[:, :-1], average_overlap, row_new[:, 1:]])
+            image_row = cv2.vconcat([image_row[:-1], average_overlap, row_new[1:]])
 
             cv2.imwrite(f"temp_folder_rows/image.png", image_row)
             os.remove(f"temp_folder_rows/row_{index}.png")
@@ -111,35 +115,19 @@ def rebuild_image(
             image_row = cv2.imread(f"temp_folder_rows/image.png")
             row_new = cv2.imread(f"temp_folder_rows/row_{index}.png")
 
-            overlap_pixel1 = image_row[:, -1:, :]
-            overlap_pixel2 = row_new[:, :1, :]
+            overlap_pixel1 = image_row[-1:, :, :]
+            overlap_pixel2 = row_new[:1, :, :]
             average_overlap = (overlap_pixel1.astype(np.float32) + overlap_pixel2.astype(np.float32)) // 2
             average_overlap = average_overlap.astype(np.uint8)
 
-            image_row = cv2.hconcat([image_row[:, :-1], average_overlap, row_new[:, 1:]])
+            image_row = cv2.vconcat([image_row[:-1], average_overlap, row_new[1:]])
 
             cv2.imwrite(f"temp_folder_rows/image.png", cv2.hconcat([image_row, row_new]))
             os.remove(f"temp_folder_rows/row_{index}.png")
 
+    print(f"Reconstructed image: image.png")
+    show_image(cv2.imread("temp_folder_rows/image.png"))
 
+rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\prediction_cat", conv_model, create_image_from_predictions)
 
-
-
-
-
-
-
-
-
-
-    print(f"Reconstructed image saved to {output_file}")
-
-# rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\prediction_cat", conv_model, create_image_from_predictions, output_file="reconstructed_image.png")
-
-# test image creation function
-# image_path_test = "./train/sektion_0_0.png"
-# image_test = cv2.imread(image_path_test)
-# image_test = cv2.cvtColor(image_test, cv2.COLOR_BGR2LAB)
-# image_test_pred = create_image_from_predictions(image_test, [100, 100])
-# show_image(image_test_pred)
 
