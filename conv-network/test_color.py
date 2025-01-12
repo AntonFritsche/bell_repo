@@ -73,7 +73,45 @@ def rebuild_image(
 
         image_files = [f for f in os.listdir(temp_folder_images) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
         image_files.sort(key=lambda x: extract_numbers(os.path.basename(x)))
-        image_files = image_files[idx * 487:]
+        image_files = image_files[idx * 487:idx * 487 + 487]
+
+        for index, image in enumerate(image_files):
+            image_path = os.path.join(temp_folder_images, image)
+            image_to_predict = cv2.imread(image_path)
+            image_to_predict = cv2.cvtColor(image_to_predict, cv2.COLOR_LAB2BGR)
+            image_pred = conv_model(image_to_predict)
+            image_rebuild_pred = create_image_from_predictions_func(image_to_predict, image_pred)
+            if index == 0:
+                cv2.imwrite(f"temp_folder_rows/row_{idx}.png", image_rebuild_pred)
+            else:
+                row = cv2.imread(f"temp_folder_rows/row_{idx}.png")
+                stacked_image = cv2.hconcat([row, image_rebuild_pred])
+                cv2.imwrite(f"temp_folder_rows/row_{idx}.png", stacked_image)
+
+    row_files = [f for f in os.listdir(temp_folder_rows) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
+    row_files.sort(key=lambda x: extract_numbers(os.path.basename(x)))
+
+    for index, x in enumerate(row_files):
+        if index == 0:
+            continue
+        elif index == 1:
+            image_row = cv2.imread(f"temp_folder_rows/row_{index - 1}.png")
+            row_new = cv2.imread(f"temp_folder_rows/row_{index}.png")
+
+            image_row = cv2.hconcat([image_row, row_new])
+            cv2.imwrite(f"temp_folder_rows/image.png", image_row)
+            # os.remove(f"temp_folder_rows/row_{index}.png")
+        else:
+            image_row = cv2.imread(f"temp_folder_rows/image.png")
+            row_new = cv2.imread(f"temp_folder_rows/row_{index}.png")
+
+            cv2.imwrite(f"temp_folder_rows/image.png", cv2.hconcat([image_row, row_new]))
+            # os.remove(f"temp_folder_rows/row_{index}.png")
+
+
+
+
+
 
 
 
