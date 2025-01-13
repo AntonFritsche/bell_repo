@@ -61,7 +61,7 @@ def rebuild_image(
     if not os.path.exists(temp_folder_rows):
         os.makedirs(temp_folder_rows)
 
-    # use preprocess function to slice image into all 13x13 pixel image spaces
+    # use preprocess function to slice image into all possible 13x13 pixel image spaces
     preprocess_image(temp_folder_images, image_to_predict)
 
     list_rows =  [torch.arange(0, 488)] # a number for each row in the input image
@@ -77,8 +77,10 @@ def rebuild_image(
             image_path = os.path.join(temp_folder_images, image)
             image_to_predict = cv2.imread(image_path)
             image_to_predict = cv2.cvtColor(image_to_predict, cv2.COLOR_LAB2BGR)
+            
             image_pred = conv_model(image_to_predict)
             image_rebuild_pred = create_image_from_predictions_func(image_to_predict, image_pred)
+
             if index == 0:
                 cv2.imwrite(f"temp_folder_rows/row_{idx}.png", image_rebuild_pred)
             else:
@@ -126,6 +128,12 @@ def rebuild_image(
             os.remove(f"temp_folder_rows/row_{index}.png")
 
     print(f"Reconstructed image: image.png")
+
+    # remove temporary folders with images inside
+    os.rmdir("temp_folder_images")
+    os.rmdir("temp_folder_rows")
+
+    # use func show_image() for showing the rebuild 
     show_image(cv2.imread("temp_folder_rows/image.png"))
 
 rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\prediction_cat", conv_model, create_image_from_predictions)
