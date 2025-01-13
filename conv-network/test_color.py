@@ -19,9 +19,15 @@ import os
 import matplotlib.pyplot as plt
 from dataset import extract_numbers
 from dataset import preprocess_image
+import shutil
+import model
 
 model_path = r"saved-models/conv_model_leakyReLU.pth"
-conv_model = torch.load(model_path, weights_only=False)
+assert os.path.isfile(model_path), f"Model file not found at {model_path}"
+state_dict = torch.load(model_path, map_location='cpu', weights_only=True)
+
+model = model.ConvModel()
+model.load_state_dict(state_dict)
 
 def show_image(input_image):
     plt.imshow(input_image, cmap='gray')
@@ -53,25 +59,30 @@ def rebuild_image(
         create_image_from_predictions_func: callable,
 ) -> None:
 
-    temp_folder_images = "temp_folder_images"
-    temp_folder_rows = "temp_folder_rows"
+    temp_folder_images = "temp_folder_images/"
+    temp_folder_rows = "temp_folder_rows/"
 
-    if not os.path.exists(temp_folder_images):
-        os.makedirs(temp_folder_images)
-    if not os.path.exists(temp_folder_rows):
-        os.makedirs(temp_folder_rows)
+    shutil.rmtree(temp_folder_images, ignore_errors=True)
+    shutil.rmtree(temp_folder_rows, ignore_errors=True)
+    os.makedirs(temp_folder_images)
+    os.makedirs(temp_folder_rows)
 
     # use preprocess function to slice image into all possible 13x13 pixel image spaces
-    preprocess_image(temp_folder_images, image_to_predict)
+    if len(os.listdir(temp_folder_images)) != 0:
+        preprocess_image(temp_folder_images, image_to_predict)
 
     list_rows =  [torch.arange(0, 488)] # a number for each row in the input image
 
     for i in list_rows:
-        idx = i
+        idx = list_rows.index(i)
+        # print(f"shape of i: {i.shape}")
+        # print(f"shape of idx: {idx.shape}")
 
         image_files = [f for f in os.listdir(temp_folder_images) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
         image_files.sort(key=lambda image_file: extract_numbers(os.path.basename(image_file)))
-        image_files = image_files[idx * 487:idx * 487 + 487]
+        index_part_one = idx * 487
+        index_part_two = idx * 487 + 487
+        image_files = image_files[index_part_one:index_part_two]
 
         for index, image in enumerate(image_files):
             image_path = os.path.join(temp_folder_images, image)
@@ -136,6 +147,6 @@ def rebuild_image(
     # use func show_image() for showing the rebuild 
     show_image(cv2.imread("temp_folder_rows/image.png"))
 
-rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\prediction_cat", conv_model)
+rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", conv_model)
 
 
