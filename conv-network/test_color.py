@@ -70,7 +70,7 @@ def rebuild_image(
         idx = i
 
         image_files = [f for f in os.listdir(temp_folder_images) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
-        image_files.sort(key=lambda x: extract_numbers(os.path.basename(x)))
+        image_files.sort(key=lambda image_file: extract_numbers(os.path.basename(image_file)))
         image_files = image_files[idx * 487:idx * 487 + 487]
 
         for index, image in enumerate(image_files):
@@ -95,7 +95,7 @@ def rebuild_image(
                 cv2.imwrite(f"temp_folder_rows/row_{idx}.png", stacked_image)
 
     row_files = [f for f in os.listdir(temp_folder_rows) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
-    row_files.sort(key=lambda x: extract_numbers(os.path.basename(x)))
+    row_files.sort(key=lambda image_file: extract_numbers(os.path.basename(image_file)))
 
     for index, x in enumerate(row_files):
         if index == 0:
@@ -136,6 +136,6 @@ def rebuild_image(
     # use func show_image() for showing the rebuild 
     show_image(cv2.imread("temp_folder_rows/image.png"))
 
-rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\prediction_cat", conv_model, create_image_from_predictions)
+rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\prediction_cat", conv_model)
 
 
