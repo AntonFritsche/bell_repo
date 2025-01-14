@@ -265,7 +265,7 @@ def preprocess_image(output_ordner, input_image, section_size=13, overlap=1):
     for y in range(img_height - section_size + 1):  # height
         for x in range(img_width - section_size + 1):  # width
             # cutting the section out of the image
-            sektion = image[y:y + section_size, x:x + section_size]
+            sektion = image_lab[y:y + section_size, x:x + section_size]
             
             # safe section
             cv2.imwrite(f"{output_ordner}/sektion_{x}_{y}.png", sektion)

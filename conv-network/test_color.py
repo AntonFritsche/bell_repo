@@ -21,16 +21,20 @@ from dataset import extract_numbers
 from dataset import preprocess_image
 import shutil
 import model
+from PIL import Image
 
 model_path = r"saved-models/conv_model_leakyReLU.pth"
 assert os.path.isfile(model_path), f"Model file not found at {model_path}"
-state_dict = torch.load(model_path, map_location='cpu', weights_only=True)
+conv_model = torch.load(model_path, weights_only=False)
 
-model = model.ConvModel()
-model.load_state_dict(state_dict)
+# state_dict = torch.load(model_path, map_location='cpu', weights_only=True)
+
+# model = model.ConvModel()
+# model.load_state_dict(state_dict)
 
 def show_image(input_image):
-    plt.imshow(input_image, cmap='gray')
+    image = Image.open(input_image)
+    plt.imshow(image)
     plt.axis('off')
     plt.title("Reconstructed Image")
     plt.show()
@@ -53,7 +57,7 @@ def create_image_from_predictions(input_image, prediction):
     return image_pred
 
 # rebuild the original image with the predicted colors of the network
-# noinspection DuplicatedCode
+# noinspection DuplicatedCode,PyTypeChecker
 def rebuild_image(
         image_to_predict: str,
         create_image_from_predictions_func: callable,
@@ -68,7 +72,7 @@ def rebuild_image(
     os.makedirs(temp_folder_rows)
 
     # use preprocess function to slice image into all possible 13x13 pixel image spaces
-    if len(os.listdir(temp_folder_images)) != 0:
+    if len(os.listdir(temp_folder_images)) == 0:
         preprocess_image(temp_folder_images, image_to_predict)
 
     list_rows =  [torch.arange(0, 488)] # a number for each row in the input image
@@ -138,15 +142,9 @@ def rebuild_image(
             cv2.imwrite(f"temp_folder_rows/image.png", cv2.hconcat([image_row, row_new]))
             os.remove(f"temp_folder_rows/row_{index}.png")
 
-    print(f"Reconstructed image: image.png")
-
-    # remove temporary folders with images inside
-    os.rmdir("temp_folder_images")
-    os.rmdir("temp_folder_rows")
-
-    # use func show_image() for showing the rebuild 
-    show_image(cv2.imread("temp_folder_rows/image.png"))
+        print("Reconstructed image: image.png")
+        show_image("temp_folder_rows/image.png")  # Jetzt erst den Ordner entfernen
+        shutil.rmtree(temp_folder_images, ignore_errors=True)
+        shutil.rmtree(temp_folder_rows, ignore_errors=True)
 
 rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", conv_model)
-
-
