@@ -269,6 +269,11 @@ def preprocess_image(output_ordner, input_image, section_size=13, overlap=1):
             
             # safe section
             cv2.imwrite(f"{output_ordner}/sektion_{x}_{y}.png", sektion)
+
+            image = Image.open(f"{output_ordner}/sektion_{x}_{y}.png")
+            grayscale_img = image.convert("L")
+            grayscale_img.save(f"{output_ordner}/sektion_{x}_{y}.png")
+
             print(f"Saved section: {output_ordner}/sektion_{x}_{y}.jpf")
             section_count += 1
 
