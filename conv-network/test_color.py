@@ -20,17 +20,16 @@ import matplotlib.pyplot as plt
 from dataset import extract_numbers
 from dataset import preprocess_image
 import shutil
-import model
+from model import ConvModel
 from PIL import Image
 
+# load model from path with input from model.py
+conv_model = ConvModel()
 model_path = r"saved-models/conv_model_leakyReLU.pth"
 assert os.path.isfile(model_path), f"Model file not found at {model_path}"
-conv_model = torch.load(model_path, weights_only=False)
-
-# state_dict = torch.load(model_path, map_location='cpu', weights_only=True)
-
-# model = model.ConvModel()
-# model.load_state_dict(state_dict)
+state_dict = torch.load(model_path, map_location='cpu')
+# conv_model.load_state_dict(state_dict)
+conv_model.eval()
 
 def show_image(input_image):
     image = Image.open(input_image)
@@ -66,10 +65,10 @@ def rebuild_image(
     temp_folder_images = "temp_folder_images/"
     temp_folder_rows = "temp_folder_rows/"
 
-    shutil.rmtree(temp_folder_images, ignore_errors=True)
-    shutil.rmtree(temp_folder_rows, ignore_errors=True)
-    os.makedirs(temp_folder_images)
-    os.makedirs(temp_folder_rows)
+    # shutil.rmtree(temp_folder_images, ignore_errors=True)
+    # shutil.rmtree(temp_folder_rows, ignore_errors=True)
+    # os.makedirs(temp_folder_images)
+    # os.makedirs(temp_folder_rows)
 
     # use preprocess function to slice image into all possible 13x13 pixel image spaces
     if len(os.listdir(temp_folder_images)) == 0:
@@ -144,7 +143,7 @@ def rebuild_image(
 
         print("Reconstructed image: image.png")
         show_image("temp_folder_rows/image.png")  # Jetzt erst den Ordner entfernen
-        shutil.rmtree(temp_folder_images, ignore_errors=True)
-        shutil.rmtree(temp_folder_rows, ignore_errors=True)
+        # shutil.rmtree(temp_folder_images, ignore_errors=True)
+        # shutil.rmtree(temp_folder_rows, ignore_errors=True)
 
 rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", conv_model)
