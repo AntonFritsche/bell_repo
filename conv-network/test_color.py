@@ -31,6 +31,14 @@ state_dict = torch.load(model_path, map_location='cpu')
 # conv_model.load_state_dict(state_dict)
 conv_model.eval()
 
+temp_folder_images = "temp_folder_images/"
+temp_folder_rows = "temp_folder_rows/"
+
+shutil.rmtree(temp_folder_images, ignore_errors=True)
+shutil.rmtree(temp_folder_rows, ignore_errors=True)
+os.makedirs(temp_folder_images)
+os.makedirs(temp_folder_rows)
+
 def show_image(input_image):
     image = Image.open(input_image)
     plt.imshow(image)
@@ -44,8 +52,7 @@ def create_image_from_predictions(input_image, prediction):
     a, b = prediction_rescaled
 
     height, width = 13, 13
-    lab_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2Lab)
-    l_channel, _, _ = cv2.split(lab_image)
+    l_channel, _, _ = cv2.split(input_image)
 
     image_pred = np.zeros((height, width, 3), np.uint8)
 
@@ -64,11 +71,6 @@ def rebuild_image(
 
     temp_folder_images = "temp_folder_images/"
     temp_folder_rows = "temp_folder_rows/"
-
-    # shutil.rmtree(temp_folder_images, ignore_errors=True)
-    # shutil.rmtree(temp_folder_rows, ignore_errors=True)
-    # os.makedirs(temp_folder_images)
-    # os.makedirs(temp_folder_rows)
 
     # use preprocess function to slice image into all possible 13x13 pixel image spaces
     if len(os.listdir(temp_folder_images)) == 0:
@@ -89,9 +91,20 @@ def rebuild_image(
 
         for index, image in enumerate(image_files):
             image_path = os.path.join(temp_folder_images, image)
+
+            # grayscale image before accessing with opencv
+            image_convert = Image.open(image_path)
+            image_convert = image_convert.convert("L")
+            image_convert = image_convert.convert("RGB")
+            image_convert.save(image_path)
+
+            # access image with opencv
             image_to_predict = cv2.imread(image_path)
-            image_to_predict = cv2.cvtColor(image_to_predict, cv2.COLOR_LAB2BGR)
-            
+            image_to_predict = cv2.cvtColor(image_to_predict, cv2.COLOR_RGB2LAB)
+            image_to_predict = torch.from_numpy(image_to_predict).float() # convert numpy image into torch tensor
+            image_to_predict = image_to_predict.permute(2, 0, 1).unsqueeze(0) # rearrange the dimension: [batch_size, channels, height, width]
+
+            # predict image and create image with predicted values
             image_pred = conv_model(image_to_predict)
             image_rebuild_pred = create_image_from_predictions_func(image_to_predict, image_pred)
 
