@@ -4,8 +4,7 @@ import pandas as pd
 import torch as torch
 import torch.nn as nn
 from PIL import Image
-from torch.utils.data import DataLoader, random_split
-from torch.utils.data import Dataset
+from torch.utils.data import DataLoader, random_split, Dataset
 from torch.utils.data import Subset
 from torchvision import transforms
 import time
