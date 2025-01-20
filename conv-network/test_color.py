@@ -48,15 +48,25 @@ def show_image(input_image):
 
 # creates an LAB image from the predictions of the model and returns it
 def create_image_from_predictions(input_image, prediction):
-    prediction_rescaled = np.multiply(prediction, 128) # scale the outputs back to lab color space
-    a, b = prediction_rescaled
+    prediction_rescaled = torch.mul(prediction, 128) # scale the outputs back to lab color space
+
+    # print(prediction_rescaled)
+
+    prediction_rescaled = prediction_rescaled.flatten().tolist()
+    a = prediction_rescaled[0] # a channel of model predictions
+    b = prediction_rescaled[1] # b channel of model predictions
+
+    # print(f"a: {a}; b: {b}")
+
+    if isinstance(input_image, torch.Tensor):  # if Torch-Tensor
+        input_image = input_image.cpu().numpy()
 
     height, width = 13, 13
-    l_channel, _, _ = cv2.split(input_image)
 
+    # print(cv2.split(input_image))
     image_pred = np.zeros((height, width, 3), np.uint8)
 
-    image_pred[:, :, 0] = l_channel
+    image_pred[:, :, 0] = input_image[:, :, 0]
     image_pred[:, :, 1] = a
     image_pred[:, :, 2] = b
 
@@ -66,7 +76,6 @@ def create_image_from_predictions(input_image, prediction):
 # noinspection DuplicatedCode,PyTypeChecker
 def rebuild_image(
         image_to_predict: str,
-        create_image_from_predictions_func: callable,
 ) -> None:
 
     temp_folder_images = "temp_folder_images/"
@@ -104,7 +113,7 @@ def rebuild_image(
 
             # predict image and create image with predicted values
             image_pred = conv_model(image_to_predict)
-            image_rebuild_pred = create_image_from_predictions_func(image_to_predict, image_pred)
+            image_rebuild_pred = create_image_from_predictions(image_to_predict, image_pred)
 
             if index == 0:
                 cv2.imwrite(f"temp_folder_rows/row_{idx}.png", image_rebuild_pred)
@@ -157,4 +166,4 @@ def rebuild_image(
         # shutil.rmtree(temp_folder_images, ignore_errors=True)
         # shutil.rmtree(temp_folder_rows, ignore_errors=True)
 
-rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", conv_model)
+rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", )
