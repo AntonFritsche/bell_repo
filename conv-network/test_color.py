@@ -34,10 +34,10 @@ conv_model.eval()
 temp_folder_images = "temp_folder_images/"
 temp_folder_rows = "temp_folder_rows/"
 
-shutil.rmtree(temp_folder_images, ignore_errors=True)
-shutil.rmtree(temp_folder_rows, ignore_errors=True)
-os.makedirs(temp_folder_images)
-os.makedirs(temp_folder_rows)
+#shutil.rmtree(temp_folder_images, ignore_errors=True)
+#shutil.rmtree(temp_folder_rows, ignore_errors=True)
+#os.makedirs(temp_folder_images)
+#os.makedirs(temp_folder_rows)
 
 def show_image(input_image):
     image = Image.open(input_image)
@@ -92,17 +92,15 @@ def rebuild_image(
         for index, image in enumerate(image_files):
             image_path = os.path.join(temp_folder_images, image)
 
-            # grayscale image before accessing with opencv
-            image_convert = Image.open(image_path)
-            image_convert = image_convert.convert("L")
-            image_convert = image_convert.convert("RGB")
-            image_convert.save(image_path)
-
             # access image with opencv
             image_to_predict = cv2.imread(image_path)
             image_to_predict = cv2.cvtColor(image_to_predict, cv2.COLOR_RGB2LAB)
+            image_to_predict = image_to_predict[:, :, 0]
             image_to_predict = torch.from_numpy(image_to_predict).float() # convert numpy image into torch tensor
-            image_to_predict = image_to_predict.permute(2, 0, 1).unsqueeze(0) # rearrange the dimension: [batch_size, channels, height, width]
+
+            image_to_predict = image_to_predict.unsqueeze(0).unsqueeze(0)  # [1, 1, 13, 13]
+            print(image_to_predict.shape)
+            # image_to_predict = image_to_predict.permute(2, 0, 1).unsqueeze(0) # rearrange the dimension: [batch_size, channels, height, width]
 
             # predict image and create image with predicted values
             image_pred = conv_model(image_to_predict)

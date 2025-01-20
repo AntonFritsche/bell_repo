@@ -257,22 +257,22 @@ def preprocess_image(output_ordner, input_image, section_size=13, overlap=1):
     if image is None:
         raise ValueError(f"Image at path '{input_image}' could not be read.")
     
-    image_lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
-    img_height, img_width, _ = image_lab.shape
+    # image_lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
+    img_height, img_width, _ = image.shape
 
     section_count = 0
     
     for y in range(img_height - section_size + 1):  # height
         for x in range(img_width - section_size + 1):  # width
             # cutting the section out of the image
-            sektion = image_lab[y:y + section_size, x:x + section_size]
+            sektion = image[y:y + section_size, x:x + section_size]
             
             # safe section
             cv2.imwrite(f"{output_ordner}/sektion_{x}_{y}.png", sektion)
 
-            image = Image.open(f"{output_ordner}/sektion_{x}_{y}.png")
-            grayscale_img = image.convert("L")
-            grayscale_img.save(f"{output_ordner}/sektion_{x}_{y}.png")
+            # image = Image.open(f"{output_ordner}/sektion_{x}_{y}.png")
+            # grayscale_img = image.convert("L")
+            # image.save(f"{output_ordner}/sektion_{x}_{y}.png")
 
             print(f"Saved section: {output_ordner}/sektion_{x}_{y}.jpf")
             section_count += 1
