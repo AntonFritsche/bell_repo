@@ -76,7 +76,7 @@ transform = transforms.Compose([
 csv_path = r"E:\Programmierung\Datein\Python\bell_repo\conv-network\data.csv"
 data = pd.read_csv(csv_path)
 
-image_dir = r"E:\Programmierung\Datein\Python\bell_repo\conv-network\train"
+image_dir = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train"
 
 dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, transform_func=transform, target_transform_param=target_transform_func)
 
@@ -90,8 +90,8 @@ val_size = len(subset) - train_size
 
 train_dataset, val_dataset = random_split(subset, [train_size, val_size])
 
-train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=8, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False)
 
 num_epochs = 50
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -113,7 +113,7 @@ for epoch in range(num_epochs):
         outputs = conv_model(images)
 
         rescaled_outputs = torch.mul(outputs, 128) # scale the outputs back to lab color space
-        rescaled_targets = torch.mul(targets, 128)
+        rescaled_targets = torch.mul(targets, 128) # scale the targets back to lab color space
 
         loss = loss_fn(rescaled_outputs, rescaled_targets)
         training_loss_ot.append(loss.item()) # loss.item() returns the value of tensor as Python number

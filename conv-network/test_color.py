@@ -34,10 +34,10 @@ conv_model.eval()
 temp_folder_images = "temp_folder_images/"
 temp_folder_rows = "temp_folder_rows/"
 
-shutil.rmtree(temp_folder_images, ignore_errors=True)
-shutil.rmtree(temp_folder_rows, ignore_errors=True)
-os.makedirs(temp_folder_images)
-os.makedirs(temp_folder_rows)
+# shutil.rmtree(temp_folder_images, ignore_errors=True)
+# shutil.rmtree(temp_folder_rows, ignore_errors=True)
+# os.makedirs(temp_folder_imasges)
+# os.makedirs(temp_folder_rows)
 
 def show_image(input_image):
     image = Image.open(input_image)
@@ -46,27 +46,28 @@ def show_image(input_image):
     plt.title("Reconstructed Image")
     plt.show()
 
+
 # creates an LAB image from the predictions of the model and returns it
 def create_image_from_predictions(input_image, prediction):
-    prediction_rescaled = np.multiply(prediction, 128) # scale the outputs back to lab color space
-    a, b = prediction_rescaled
+    prediction_rescaled = torch.mul(prediction, 128) # scale the outputs back to lab color space
+    a, b = prediction_rescaled[0]
+    a = a.detach().numpy()
+    b = b.detach().numpy()
+    # print(f"a: {a}, b: {b}")
 
-    height, width = 13, 13
-    l_channel, _, _ = cv2.split(input_image)
+    l_channel = input_image
+    l_channel = l_channel
 
-    image_pred = np.zeros((height, width, 3), np.uint8)
+    a_channel = np.full_like(l_channel, a)
+    b_channel = np.full_like(l_channel, b)
 
-    image_pred[:, :, 0] = l_channel
-    image_pred[:, :, 1] = a
-    image_pred[:, :, 2] = b
-
+    image_pred = cv2.merge([l_channel, a_channel, b_channel])
     return image_pred
 
 # rebuild the original image with the predicted colors of the network
 # noinspection DuplicatedCode,PyTypeChecker
 def rebuild_image(
         image_to_predict: str,
-        create_image_from_predictions_func: callable,
 ) -> None:
 
     temp_folder_images = "temp_folder_images/"
@@ -95,18 +96,21 @@ def rebuild_image(
             # grayscale image before accessing with opencv
             image_convert = Image.open(image_path)
             image_convert = image_convert.convert("L")
-            image_convert = image_convert.convert("RGB")
             image_convert.save(image_path)
+            # image_convert_shape = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+            # print(f"image_convert_shape: {image_convert_shape.shape}")
 
             # access image with opencv
-            image_to_predict = cv2.imread(image_path)
-            image_to_predict = cv2.cvtColor(image_to_predict, cv2.COLOR_RGB2LAB)
-            image_to_predict = torch.from_numpy(image_to_predict).float() # convert numpy image into torch tensor
-            image_to_predict = image_to_predict.permute(2, 0, 1).unsqueeze(0) # rearrange the dimension: [batch_size, channels, height, width]
+            image_to_predict = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+            image_to_predict_tensor = torch.from_numpy(image_to_predict).float() # convert numpy image into torch tensor
+            image_to_predict_tensor = image_to_predict_tensor.unsqueeze(0).unsqueeze(0) # rearrange the dimension: [batch_size, channels, height, width]
+            print(f"image_to_predict.shape: {image_to_predict_tensor.shape}")
 
             # predict image and create image with predicted values
-            image_pred = conv_model(image_to_predict)
-            image_rebuild_pred = create_image_from_predictions_func(image_to_predict, image_pred)
+            image_pred = conv_model(image_to_predict_tensor)
+            print(image_pred)
+
+            image_rebuild_pred = create_image_from_predictions(image_to_predict, image_pred)
 
             if index == 0:
                 cv2.imwrite(f"temp_folder_rows/row_{idx}.png", image_rebuild_pred)
@@ -159,4 +163,4 @@ def rebuild_image(
         # shutil.rmtree(temp_folder_images, ignore_errors=True)
         # shutil.rmtree(temp_folder_rows, ignore_errors=True)
 
-rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", conv_model)
+rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png")
