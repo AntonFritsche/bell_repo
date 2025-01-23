@@ -1,5 +1,8 @@
-# BeLL Projekt: Python Implementierung von These
+# BeLL Development Projekt
 
+import os
+import cv2
+import matplotlib.pyplot as plt
 # import torch.nn as nn
 # import torch.nn.functional as F
 # from torch.utils.data import DataLoader, random_split
@@ -14,14 +17,11 @@
 # from dataset import preprocess_image
 import numpy as np
 import torch as torch
-import cv2
-import os
-import matplotlib.pyplot as plt
+from PIL import Image
 from dataset import extract_numbers
 from dataset import preprocess_image
-import shutil
 from model import ConvModel
-from PIL import Image
+
 
 # load model from path with input from model.py
 conv_model = ConvModel()
@@ -36,7 +36,7 @@ temp_folder_rows = "temp_folder_rows/"
 
 # shutil.rmtree(temp_folder_images, ignore_errors=True)
 # shutil.rmtree(temp_folder_rows, ignore_errors=True)
-# os.makedirs(temp_folder_imasges)
+# os.makedirs(temp_folder_images)
 # os.makedirs(temp_folder_rows)
 
 def show_image(input_image):
@@ -51,8 +51,8 @@ def show_image(input_image):
 def create_image_from_predictions(input_image, prediction):
     prediction_rescaled = torch.mul(prediction, 128) # scale the outputs back to lab color space
     a, b = prediction_rescaled[0]
-    a = a.detach().numpy()
-    b = b.detach().numpy()
+    a = a.detach().numpy() # converts a prediction into numpy arrays
+    b = b.detach().numpy() # converts a prediction into numpy arrays
     # print(f"a: {a}, b: {b}")
 
     l_channel = input_image
@@ -70,9 +70,6 @@ def rebuild_image(
         image_to_predict: str,
 ) -> None:
 
-    temp_folder_images = "temp_folder_images/"
-    temp_folder_rows = "temp_folder_rows/"
-
     # use preprocess function to slice image into all possible 13x13 pixel image spaces
     if len(os.listdir(temp_folder_images)) == 0:
         preprocess_image(temp_folder_images, image_to_predict)
@@ -86,7 +83,7 @@ def rebuild_image(
 
         image_files = [f for f in os.listdir(temp_folder_images) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
         image_files.sort(key=lambda image_file: extract_numbers(os.path.basename(image_file)))
-        index_part_one = idx * 487
+        index_part_one = idx * 488
         index_part_two = idx * 487 + 487
         image_files = image_files[index_part_one:index_part_two]
 
