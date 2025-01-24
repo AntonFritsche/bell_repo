@@ -7,7 +7,7 @@ from PIL import Image
 from torch.utils.data import DataLoader, random_split, Dataset
 from torch.utils.data import Subset
 from torchvision import transforms
-import time
+from time import time
 
 import model
 
@@ -96,12 +96,12 @@ val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False)
 num_epochs = 50
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 conv_model.to(device)
-start_time = time.time()
+start_time = time()
 training_loss_ot = [] # list for training loss over time
 validation_loss_ot = [] # list for validation loss over time
 
 for epoch in range(num_epochs):
-    epoch_time = time.time()
+    epoch_time = time()
     conv_model.train()
     running_loss = 0.0
     for images, targets in train_loader:
@@ -146,9 +146,9 @@ for epoch in range(num_epochs):
             validation_loss_ot.append(loss.item())  # loss.item() returns the value of tensor as Python number
             val_loss += loss.item()
     print(f"Validation Loss: {val_loss/len(val_loader):.4f}")
-    print(f"Epoch time: {time.time() - epoch_time:.2f} seconds")
+    print(f"Epoch time: {time() - epoch_time:.2f} seconds")
     print("\n")
-elapsed_time = time.time() - start_time
+elapsed_time = time() - start_time
 # noinspection PyUnboundLocalVariable
 print(f"Training time: {elapsed_time:.2f} seconds")
 model_path = r"saved-models/conv_model_leakyReLU.pth"

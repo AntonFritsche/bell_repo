@@ -1,7 +1,7 @@
 # Conv-Network mit PyTorch
 import torch as torch
 import torch.nn as nn
-import torch.nn.functional as F
+# import torch.nn.functional as F
 # import numpy as np
 # import pandas as pd
 # import cv2
@@ -40,7 +40,8 @@ class ConvModel(nn.Module):
 
         # fully connected layer 4
         self.fc4 = nn.Linear(in_features=8, out_features=2)
-    
+
+    # noinspection PyPep8Naming
     def forward(self, x):
         # test shape: (1, 13, 13)
         LeakyReLU = nn.LeakyReLU()
