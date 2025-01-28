@@ -69,13 +69,14 @@ def create_image_from_predictions(input_image, prediction):
 # noinspection DuplicatedCode,PyTypeChecker
 def rebuild_image(
         image_to_predict: str,
-) -> None:
+        start_calc: int,
+        end_calc: int,) -> None:
 
     # use preprocess function to slice image into all possible 13x13 pixel image spaces
     if len(os.listdir(temp_folder_images)) == 0:
         preprocess_image(temp_folder_images, image_to_predict)
 
-    tensor_rows =  torch.arange(0, 486) # a number for each row in the input image
+    tensor_rows =  torch.arange(start_calc, end_calc) # a number for each row in the input image
     list_rows = tensor_rows.tolist()
     print(f"list_rows : {list_rows[:20]}")
 
@@ -117,7 +118,7 @@ def rebuild_image(
 
                 overlap_pixel1 = row[:, -1:, :]
                 overlap_pixel2 = image_rebuild_pred[:, :1, :]
-                average_overlap = (overlap_pixel1.astype(np.float32) + overlap_pixel2.astype(np.float32)) // 2
+                average_overlap = (overlap_pixel1.astype(np.float64) + overlap_pixel2.astype(np.float64)) // 2
                 average_overlap = average_overlap.astype(np.uint8)
 
                 stacked_image = cv2.hconcat([row[:, :-1], average_overlap, image_rebuild_pred[:, 1:]])
@@ -165,4 +166,8 @@ def rebuild_image(
         # shutil.rmtree(temp_folder_images, ignore_errors=True)
         # shutil.rmtree(temp_folder_rows, ignore_errors=True)
 
-rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png")
+# rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 0, 100)
+# rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 101, 200)
+# rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 201, 300)
+# rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 301, 400)
+# rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 401, 487)
