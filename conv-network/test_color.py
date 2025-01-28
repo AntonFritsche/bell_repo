@@ -74,7 +74,9 @@ def rebuild_image(
     if len(os.listdir(temp_folder_images)) == 0:
         preprocess_image(temp_folder_images, image_to_predict)
 
-    list_rows =  [torch.arange(0, 488)] # a number for each row in the input image
+    tensor_rows =  torch.arange(0, 486) # a number for each row in the input image
+    list_rows = tensor_rows.tolist()
+    print(f"list_rows : {list_rows[:20]}")
 
     for i in list_rows:
         idx = list_rows.index(i)
@@ -101,11 +103,11 @@ def rebuild_image(
             image_to_predict = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
             image_to_predict_tensor = torch.from_numpy(image_to_predict).float() # convert numpy image into torch tensor
             image_to_predict_tensor = image_to_predict_tensor.unsqueeze(0).unsqueeze(0) # rearrange the dimension: [batch_size, channels, height, width]
-            print(f"image_to_predict.shape: {image_to_predict_tensor.shape}")
+            # print(f"image_to_predict.shape: {image_to_predict_tensor.shape}")
 
             # predict image and create image with predicted values
             image_pred = conv_model(image_to_predict_tensor)
-            print(image_pred)
+            # print(image_pred)
 
             image_rebuild_pred = create_image_from_predictions(image_to_predict, image_pred)
 
@@ -121,6 +123,13 @@ def rebuild_image(
 
                 stacked_image = cv2.hconcat([row[:, :-1], average_overlap, image_rebuild_pred[:, 1:]])
                 cv2.imwrite(f"temp_folder_rows/row_{idx}.png", stacked_image)
+
+        for index, image in enumerate(image_files):
+            image_path = os.path.join(temp_folder_images, image)
+            os.remove(image_path)
+
+        print(f"row number {idx} processed")
+        print(f"removed image from index {index_part_one} to index {index_part_two}\n")
 
     row_files = [f for f in os.listdir(temp_folder_rows) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
     row_files.sort(key=lambda image_file: extract_numbers(os.path.basename(image_file)))
