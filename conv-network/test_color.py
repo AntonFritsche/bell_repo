@@ -21,6 +21,7 @@ from PIL import Image
 from dataset import extract_numbers
 from dataset import preprocess_image
 from model import ConvModel
+import shutil
 
 
 # load model from path with input from model.py
@@ -34,10 +35,10 @@ conv_model.eval()
 temp_folder_images = "temp_folder_images/"
 temp_folder_rows = "temp_folder_rows/"
 
-# shutil.rmtree(temp_folder_images, ignore_errors=True)
-# shutil.rmtree(temp_folder_rows, ignore_errors=True)
-# os.makedirs(temp_folder_images)
-# os.makedirs(temp_folder_rows)
+shutil.rmtree(temp_folder_images, ignore_errors=True)
+shutil.rmtree(temp_folder_rows, ignore_errors=True)
+os.makedirs(temp_folder_images)
+os.makedirs(temp_folder_rows)
 
 def show_image(input_image):
     image = Image.open(input_image)
@@ -85,9 +86,7 @@ def rebuild_image(
 
         image_files = [f for f in os.listdir(temp_folder_images) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
         image_files.sort(key=lambda image_file: extract_numbers(os.path.basename(image_file)))
-        index_part_one = idx * 488
-        index_part_two = idx * 487 + 487
-        image_files = image_files[index_part_one:index_part_two]
+        image_files = image_files[:487]
 
         for index, image in enumerate(image_files):
             image_path = os.path.join(temp_folder_images, image)
@@ -123,13 +122,10 @@ def rebuild_image(
 
                 stacked_image = cv2.hconcat([row[:, :-1], average_overlap, image_rebuild_pred[:, 1:]])
                 cv2.imwrite(f"temp_folder_rows/row_{idx}.png", stacked_image)
-
-        for index, image in enumerate(image_files):
-            image_path = os.path.join(temp_folder_images, image)
             os.remove(image_path)
 
-        print(f"row number {idx} processed")
-        print(f"removed image from index {index_part_one} to index {index_part_two}\n")
+        print(f"row number {idx} processed \n")
+
 
     row_files = [f for f in os.listdir(temp_folder_rows) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
     row_files.sort(key=lambda image_file: extract_numbers(os.path.basename(image_file)))
@@ -143,7 +139,7 @@ def rebuild_image(
 
             overlap_pixel1 = image_row[-1:, :, :]
             overlap_pixel2 = row_new[:1, :, :]
-            average_overlap = (overlap_pixel1.astype(np.float32) + overlap_pixel2.astype(np.float32)) // 2
+            average_overlap = (overlap_pixel1.astype(np.float64) + overlap_pixel2.astype(np.float64)) // 2
             average_overlap = average_overlap.astype(np.uint8)
 
             image_row = cv2.vconcat([image_row[:-1], average_overlap, row_new[1:]])
@@ -156,7 +152,7 @@ def rebuild_image(
 
             overlap_pixel1 = image_row[-1:, :, :]
             overlap_pixel2 = row_new[:1, :, :]
-            average_overlap = (overlap_pixel1.astype(np.float32) + overlap_pixel2.astype(np.float32)) // 2
+            average_overlap = (overlap_pixel1.astype(np.float64) + overlap_pixel2.astype(np.float64)) // 2
             average_overlap = average_overlap.astype(np.uint8)
 
             image_row = cv2.vconcat([image_row[:-1], average_overlap, row_new[1:]])
