@@ -174,3 +174,4 @@ def rebuild_image(row_ordner):
         # shutil.rmtree(temp_folder_images, ignore_errors=True)
         # shutil.rmtree(temp_folder_rows, ignore_errors=True)
 
+rebuild_image(r"temp_folder_rows")
