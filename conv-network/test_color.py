@@ -67,7 +67,7 @@ def create_image_from_predictions(input_image, prediction):
 
 # rebuild the original image with the predicted colors of the network
 # noinspection DuplicatedCode,PyTypeChecker
-def rebuild_image(
+def rebuild_rows(
         image_to_predict: str,
         start_calc: int,
         end_calc: int,) -> None:
@@ -128,7 +128,15 @@ def rebuild_image(
         print(f"row number {idx} processed \n")
 
 
-    row_files = [f for f in os.listdir(temp_folder_rows) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
+# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 0, 100)
+# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 101, 200)
+# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 201, 300)
+# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 301, 400)
+# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 401, 487)
+
+# noinspection DuplicatedCode
+def rebuild_image(row_ordner):
+    row_files = [f for f in os.listdir(row_ordner) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
     row_files.sort(key=lambda image_file: extract_numbers(os.path.basename(image_file)))
 
     for index, x in enumerate(row_files):
@@ -166,8 +174,3 @@ def rebuild_image(
         # shutil.rmtree(temp_folder_images, ignore_errors=True)
         # shutil.rmtree(temp_folder_rows, ignore_errors=True)
 
-# rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 0, 100)
-# rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 101, 200)
-# rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 201, 300)
-# rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 301, 400)
-# rebuild_image(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 401, 487)
