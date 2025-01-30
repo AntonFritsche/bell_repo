@@ -127,13 +127,6 @@ def rebuild_rows(
 
         print(f"row number {idx} processed \n")
 
-
-# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 0, 100)
-# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 101, 200)
-# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 201, 300)
-# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 301, 400)
-# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 401, 487)
-
 # noinspection DuplicatedCode
 def rebuild_image(row_ordner):
     row_files = [f for f in os.listdir(row_ordner) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
@@ -173,5 +166,13 @@ def rebuild_image(row_ordner):
         show_image("temp_folder_rows/image.png")  # Jetzt erst den Ordner entfernen
         # shutil.rmtree(temp_folder_images, ignore_errors=True)
         # shutil.rmtree(temp_folder_rows, ignore_errors=True)
+
+# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 0, 100)
+# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 101, 200)
+# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 201, 300)
+# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 301, 400)
+# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 401, 487)
+
+
 
 rebuild_image(r"temp_folder_rows")
