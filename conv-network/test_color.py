@@ -32,13 +32,13 @@ state_dict = torch.load(model_path, map_location='cpu')
 # conv_model.load_state_dict(state_dict)
 conv_model.eval()
 
-temp_folder_images = "temp_folder_images/"
-temp_folder_rows = "temp_folder_rows/"
+temp_folder_images = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\temp_folder_images"
+temp_folder_rows = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\temp_folder_rows"
 
-shutil.rmtree(temp_folder_images, ignore_errors=True)
-shutil.rmtree(temp_folder_rows, ignore_errors=True)
-os.makedirs(temp_folder_images)
-os.makedirs(temp_folder_rows)
+#shutil.rmtree(temp_folder_images, ignore_errors=True)
+#shutil.rmtree(temp_folder_rows, ignore_errors=True)
+#os.makedirs(temp_folder_images)
+#os.makedirs(temp_folder_rows)
 
 # use preprocess function to slice image into all possible 13x13 pixel image spaces
 if len(os.listdir(temp_folder_images)) == 0:
@@ -167,7 +167,5 @@ rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 
 # rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 201, 300)
 # rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 301, 400)
 # rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 401, 487)
-
-
 
 # rebuild_image(r"temp_folder_rows")
