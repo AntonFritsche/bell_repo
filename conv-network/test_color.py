@@ -40,6 +40,10 @@ shutil.rmtree(temp_folder_rows, ignore_errors=True)
 os.makedirs(temp_folder_images)
 os.makedirs(temp_folder_rows)
 
+# use preprocess function to slice image into all possible 13x13 pixel image spaces
+if len(os.listdir(temp_folder_images)) == 0:
+    preprocess_image(temp_folder_images, r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png")
+
 def show_image(input_image):
     image = Image.open(input_image)
     plt.imshow(image)
@@ -70,62 +74,53 @@ def create_image_from_predictions(input_image, prediction):
 def rebuild_rows(
         image_to_predict: str,
         start_calc: int,
-        end_calc: int,) -> None:
-
-    # use preprocess function to slice image into all possible 13x13 pixel image spaces
-    if len(os.listdir(temp_folder_images)) == 0:
-        preprocess_image(temp_folder_images, image_to_predict)
-
-    tensor_rows =  torch.arange(start_calc, end_calc) # a number for each row in the input image
+        end_calc: int,
+        num_sections_per_row=487,
+        target_row_width=500,
+        section_size=13
+) -> None:
+    tensor_rows = torch.arange(start_calc, end_calc)  # Zeilennummern für die Rekonstruktion
     list_rows = tensor_rows.tolist()
     print(f"list_rows : {list_rows[:20]}")
 
     for i in list_rows:
         idx = list_rows.index(i)
-        # print(f"shape of i: {i.shape}")
-        # print(f"shape of idx: {idx.shape}")
 
-        image_files = [f for f in os.listdir(temp_folder_images) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
+        image_files = [f for f in os.listdir(temp_folder_images) if
+                       f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
         image_files.sort(key=lambda image_file: extract_numbers(os.path.basename(image_file)))
-        image_files = image_files[:487]
 
-        for index, image in enumerate(image_files):
-            image_path = os.path.join(temp_folder_images, image)
+        start_idx = idx * num_sections_per_row
+        end_idx = start_idx + num_sections_per_row
+        row_sections = image_files[start_idx:end_idx]
 
-            # grayscale image before accessing with opencv
-            image_convert = Image.open(image_path)
-            image_convert = image_convert.convert("L")
-            image_convert.save(image_path)
-            # image_convert_shape = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-            # print(f"image_convert_shape: {image_convert_shape.shape}")
+        row_images = []
 
-            # access image with opencv
-            image_to_predict = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-            image_to_predict_tensor = torch.from_numpy(image_to_predict).float() # convert numpy image into torch tensor
-            image_to_predict_tensor = image_to_predict_tensor.unsqueeze(0).unsqueeze(0) # rearrange the dimension: [batch_size, channels, height, width]
-            # print(f"image_to_predict.shape: {image_to_predict_tensor.shape}")
+        for section_file in row_sections:
+            section_path = os.path.join(temp_folder_images, section_file)
 
-            # predict image and create image with predicted values
-            image_pred = conv_model(image_to_predict_tensor)
-            # print(image_pred)
+            img_convert = Image.open(section_path).convert("L")
+            img_convert.save(section_path)
 
-            image_rebuild_pred = create_image_from_predictions(image_to_predict, image_pred)
+            section_image = cv2.imread(section_path, cv2.IMREAD_GRAYSCALE)
+            section_tensor = torch.from_numpy(section_image).float().unsqueeze(0).unsqueeze(0)
+            section_pred = conv_model(section_tensor)
 
-            if index == 0:
-                cv2.imwrite(f"temp_folder_rows/row_{idx}.png", image_rebuild_pred)
-            else:
-                row = cv2.imread(f"temp_folder_rows/row_{idx}.png")
+            section_reconstructed = create_image_from_predictions(section_image, section_pred)
+            row_images.append(section_reconstructed)
 
-                overlap_pixel1 = row[:, -1:, :]
-                overlap_pixel2 = image_rebuild_pred[:, :1, :]
-                average_overlap = (overlap_pixel1.astype(np.float64) + overlap_pixel2.astype(np.float64)) // 2
-                average_overlap = average_overlap.astype(np.uint8)
+            os.remove(section_path)
 
-                stacked_image = cv2.hconcat([row[:, :-1], average_overlap, image_rebuild_pred[:, 1:]])
-                cv2.imwrite(f"temp_folder_rows/row_{idx}.png", stacked_image)
-            os.remove(image_path)
+        row = np.hstack(row_images)
 
-        print(f"row number {idx} processed \n")
+        if row.shape[1] != target_row_width:
+            row = cv2.resize(row, (target_row_width, section_size), interpolation=cv2.INTER_AREA)
+
+        row_path = os.path.join(temp_folder_rows, f"row_{idx}.png")
+        cv2.imwrite(row_path, row)
+
+        print(f"Row {idx} reconstructed and saved as {row_path}.")
+
 
 # noinspection DuplicatedCode
 def rebuild_image(row_ordner):
@@ -167,7 +162,7 @@ def rebuild_image(row_ordner):
         # shutil.rmtree(temp_folder_images, ignore_errors=True)
         # shutil.rmtree(temp_folder_rows, ignore_errors=True)
 
-# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 0, 100)
+rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 0, 100)
 # rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 101, 200)
 # rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 201, 300)
 # rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 301, 400)
@@ -175,4 +170,4 @@ def rebuild_image(row_ordner):
 
 
 
-rebuild_image(r"temp_folder_rows")
+# rebuild_image(r"temp_folder_rows")
