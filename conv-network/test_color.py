@@ -139,52 +139,59 @@ def rebuild_rows(
         print(f"Row {idx} reconstructed and saved as {row_path}.")
 
 
-# noinspection DuplicatedCode
-def rebuild_image(row_ordner):
+# noinspection DuplicatedCode,PyTypeChecker
+def rebuild_image(row_ordner, target_height=500):
     row_files = [f for f in os.listdir(row_ordner) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
     row_files.sort(key=lambda image_file: extract_numbers(os.path.basename(image_file)))
 
-    for index, x in enumerate(row_files):
-        if index == 0:
+    # Begrenze die Zeilen auf max. 500
+    row_files = row_files[:target_height]
+
+    all_rows = []
+
+    for index, row_file in enumerate(row_files):
+        row_path = os.path.join(row_ordner, row_file)
+        row_image = cv2.imread(row_path)
+
+        if row_image is None:
+            print(f"Fehler: Konnte {row_path} nicht lesen.")
             continue
-        elif index == 1:
-            image_row = cv2.imread(f"temp_folder_rows/row_{index - 1}.png")
-            row_new = cv2.imread(f"temp_folder_rows/row_{index}.png")
 
-            overlap_pixel1 = image_row[-1:, :, :]
-            overlap_pixel2 = row_new[:1, :, :]
+        # Stelle sicher, dass jede Zeile genau 13 Pixel hoch ist
+        if row_image.shape[0] != 13:
+            print(f"Warnung: Zeile {row_file} hat Höhe {row_image.shape[0]} statt 13. Resizing...")
+            row_image = cv2.resize(row_image, (row_image.shape[1], 13), interpolation=cv2.INTER_AREA)
+
+        if index > 0:
+            overlap_pixel1 = all_rows[-1][-1:, :, :]
+            overlap_pixel2 = row_image[:1, :, :]
             average_overlap = (overlap_pixel1.astype(np.float64) + overlap_pixel2.astype(np.float64)) // 2
             average_overlap = average_overlap.astype(np.uint8)
 
-            image_row = cv2.vconcat([image_row[:-1], average_overlap, row_new[1:]])
+            all_rows[-1][-1:, :, :] = average_overlap
+            row_image[:1, :, :] = average_overlap
 
-            cv2.imwrite(f"temp_folder_rows/image.png", image_row)
-            os.remove(f"temp_folder_rows/row_{index}.png")
-        else:
-            image_row = cv2.imread(f"temp_folder_rows/image.png")
-            row_new = cv2.imread(f"temp_folder_rows/row_{index}.png")
+        all_rows.append(row_image)
 
-            overlap_pixel1 = image_row[-1:, :, :]
-            overlap_pixel2 = row_new[:1, :, :]
-            average_overlap = (overlap_pixel1.astype(np.float64) + overlap_pixel2.astype(np.float64)) // 2
-            average_overlap = average_overlap.astype(np.uint8)
+    final_image = cv2.vconcat(all_rows)
 
-            image_row = cv2.vconcat([image_row[:-1], average_overlap, row_new[1:]])
+    # Falls das Bild nach dem Stacking noch zu hoch ist, resize auf 500px Höhe
+    if final_image.shape[0] != 500:
+        print(f"Finale Bildgröße: {final_image.shape} - Resizing auf (500,500)")
+        final_image = cv2.resize(final_image, (500, 500), interpolation=cv2.INTER_AREA)
 
-            cv2.imwrite(f"temp_folder_rows/image.png", cv2.hconcat([image_row, row_new]))
-            # os.remove(f"temp_folder_rows/row_{index}.png")
-
-        print("Reconstructed image: image.png")
-        show_image("temp_folder_rows/image.png")  # Jetzt erst den Ordner entfernen
-        # shutil.rmtree(temp_folder_images, ignore_errors=True)
-        # shutil.rmtree(temp_folder_rows, ignore_errors=True)
+    cv2.imwrite("image.png", final_image)
+    print("Reconstructed image: image.png")
+    show_image("image.png")
+    # shutil.rmtree(temp_folder_images, ignore_errors=True)
+    # shutil.rmtree(temp_folder_rows, ignore_errors=True)
 
 # preprocess_image_rebuild()
 
 # rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 0, 100)
-rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 100, 200)
+# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 100, 200)
 # rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 200, 300)
 # rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 300, 400)
-# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 400, 487)
+# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 400, 488)
 
-# rebuild_image(r"temp_folder_rows")
+rebuild_image(temp_folder_rows)
