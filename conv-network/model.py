@@ -155,15 +155,6 @@ class ConvModel(nn.Module):
         # out = F.sigmoid(out)
         out = LeakyReLU(out)
 
-        out = self.fc3(out)
-        # out = F.relu(out)
-        # out = F.sigmoid(out)
-        out = LeakyReLU(out)
-
-        out = self.fc4(out)
-        # out = F.relu(out)
-        # out = F.sigmoid(out)
-        out = LeakyReLU(out)
         # print(torch._shape_as_tensor(out))
 
         return out # shape: tensor([2])

@@ -18,14 +18,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch as torch
 from PIL import Image
-from dataset import extract_numbers
 from dataset import preprocess_image
 from model import ConvModel
 import shutil
+import re
 
 
 # load model from path with input from model.py
-conv_model = ConvModel()
+conv_model = ConvModel(1, 4, 4, 8, 8, 16, 16, 32, 32, 64, 64, 128, 128, 32, 32, 2)
 model_path = r"saved-models/conv_model_leakyReLU.pth"
 assert os.path.isfile(model_path), f"Model file not found at {model_path}"
 state_dict = torch.load(model_path, map_location='cpu')
@@ -35,14 +35,15 @@ conv_model.eval()
 temp_folder_images = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\temp_folder_images"
 temp_folder_rows = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\temp_folder_rows"
 
-#shutil.rmtree(temp_folder_images, ignore_errors=True)
-#shutil.rmtree(temp_folder_rows, ignore_errors=True)
-#os.makedirs(temp_folder_images)
-#os.makedirs(temp_folder_rows)
+def preprocess_image_rebuild():
+    shutil.rmtree(temp_folder_images, ignore_errors=True)
+    shutil.rmtree(temp_folder_rows, ignore_errors=True)
+    os.makedirs(temp_folder_images)
+    os.makedirs(temp_folder_rows)
 
-# use preprocess function to slice image into all possible 13x13 pixel image spaces
-if len(os.listdir(temp_folder_images)) == 0:
-    preprocess_image(temp_folder_images, r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png")
+    # use preprocess function to slice image into all possible 13x13 pixel image spaces
+    if len(os.listdir(temp_folder_images)) == 0:
+        preprocess_image(temp_folder_images, r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png")
 
 def show_image(input_image):
     image = Image.open(input_image)
@@ -51,6 +52,8 @@ def show_image(input_image):
     plt.title("Reconstructed Image")
     plt.show()
 
+def extract_numbers(filename):
+    return [int(num) for num in re.findall(r'\d+', filename)]
 
 # creates an LAB image from the predictions of the model and returns it
 def create_image_from_predictions(input_image, prediction):
@@ -84,7 +87,7 @@ def rebuild_rows(
     print(f"list_rows : {list_rows[:20]}")
 
     for i in list_rows:
-        idx = list_rows.index(i)
+        idx = i
 
         image_files = [f for f in os.listdir(temp_folder_images) if
                        f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
@@ -98,18 +101,32 @@ def rebuild_rows(
 
         for section_file in row_sections:
             section_path = os.path.join(temp_folder_images, section_file)
+            try:
+                # print(f"Lade und verarbeite Bild: {section_path}")
 
-            img_convert = Image.open(section_path).convert("L")
-            img_convert.save(section_path)
+                section_image = cv2.imread(section_path, cv2.IMREAD_GRAYSCALE)
+                if section_image is None:
+                    print(f"Fehler: Bild {section_path} konnte nicht gelesen werden.")
+                    break
 
-            section_image = cv2.imread(section_path, cv2.IMREAD_GRAYSCALE)
-            section_tensor = torch.from_numpy(section_image).float().unsqueeze(0).unsqueeze(0)
-            section_pred = conv_model(section_tensor)
+                section_tensor = torch.from_numpy(section_image).float().unsqueeze(0).unsqueeze(0)
+                # print(f"Tensor erfolgreich erstellt für {section_path}")
 
-            section_reconstructed = create_image_from_predictions(section_image, section_pred)
-            row_images.append(section_reconstructed)
+                section_pred = conv_model(section_tensor)
+                if section_pred is None:
+                    print(f"Fehler: Modell liefert keine Ausgabe für {section_path}")
+                    break
 
-            os.remove(section_path)
+                section_reconstructed = create_image_from_predictions(section_image, section_pred)
+                if section_reconstructed is None or section_reconstructed.size == 0:
+                    print(f"Fehler: Rekonstruktion für {section_path} fehlgeschlagen.")
+                    break
+
+                row_images.append(section_reconstructed)
+
+            except Exception as e:
+                print(f"Unerwarteter Fehler beim Verarbeiten des Bildes {section_path}: {e}")
+                break
 
         row = np.hstack(row_images)
 
@@ -155,17 +172,19 @@ def rebuild_image(row_ordner):
             image_row = cv2.vconcat([image_row[:-1], average_overlap, row_new[1:]])
 
             cv2.imwrite(f"temp_folder_rows/image.png", cv2.hconcat([image_row, row_new]))
-            os.remove(f"temp_folder_rows/row_{index}.png")
+            # os.remove(f"temp_folder_rows/row_{index}.png")
 
         print("Reconstructed image: image.png")
         show_image("temp_folder_rows/image.png")  # Jetzt erst den Ordner entfernen
         # shutil.rmtree(temp_folder_images, ignore_errors=True)
         # shutil.rmtree(temp_folder_rows, ignore_errors=True)
 
-rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 0, 100)
-# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 101, 200)
-# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 201, 300)
-# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 301, 400)
-# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 401, 487)
+# preprocess_image_rebuild()
+
+# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 0, 100)
+rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 100, 200)
+# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 200, 300)
+# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 300, 400)
+# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 400, 487)
 
 # rebuild_image(r"temp_folder_rows")

@@ -12,7 +12,7 @@ from time import time
 import model
 
 #instantate the convolution model
-conv_model = model.ConvModel()
+conv_model = model.ConvModel(1, 4, 4, 8, 8, 16, 16, 32, 32, 64, 64, 128, 128, 32, 32, 2)
 print(conv_model)
 
 # list of parameters
