@@ -31,7 +31,7 @@ print("output_size: ", params[0].size(), "\n")
 
 # Loss function
 loss_fn = nn.MSELoss() # Mean Squared Error: error is squared
-# loss_fn = nn.L1Loss() # Mean Absolute Error: error is just absolute
+# loss_fn = nn.L1Loss() # Mean Absolute Error: error is absolute
 
 # Optimizers specified in the torch.optim package
 optimizer = torch.optim.Adam(conv_model.parameters(), lr=0.001)
@@ -82,7 +82,7 @@ dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, transfo
 
 # print(dataset)
 
-subset_indices = list(range(24999))
+subset_indices = list(range(238144))
 subset = Subset(dataset, subset_indices)
 
 train_size = int(0.9 * len(subset))
@@ -90,8 +90,8 @@ val_size = len(subset) - train_size
 
 train_dataset, val_dataset = random_split(subset, [train_size, val_size])
 
-train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=256, shuffle=False)
 
 num_epochs = 50
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -124,11 +124,10 @@ for epoch in range(num_epochs):
 
         running_loss += loss.item()
 
-    # noinspection PyUnboundLocalVariable
+    print(f"Epoch {epoch+1}/{num_epochs}")
     print(f"rescaled targets: {[round(val, 4) for val in rescaled_targets[0].tolist()]}")
-    # noinspection PyUnboundLocalVariable
     print(f"rescaled outputs: {[round(val, 4) for val in rescaled_outputs[0].tolist()]}")
-    print(f"Epoch {epoch+1}/{num_epochs}, Loss: {running_loss/len(train_loader):.4f}")
+    print(f"Loss: {running_loss/len(train_loader):.4f}")
 
     # Validation (optional)
     conv_model.eval()

@@ -8,8 +8,8 @@ import cv2
 import pandas as pd
 
 def extract_numbers(filename):
-    match = re.findall(r'\d+', filename)
-    return int(match[0]) if match else 0
+    numbers = re.findall(r'\d+', filename)
+    return tuple(map(int, numbers)) if numbers else (0,)
 
 def create_datasets(source_folder, dest_folder, test_size=200):
     train_folder = os.path.join(dest_folder, 'train')
@@ -256,7 +256,7 @@ def preprocess_image(output_ordner, input_image, section_size=13, overlap=1):
     image = cv2.imread(input_image)
     if image is None:
         raise ValueError(f"Image at path '{input_image}' could not be read.")
-    
+
     # image_lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
     img_height, img_width, _ = image.shape
 
@@ -284,13 +284,13 @@ def process_all_images(image_dir, csv_path, section_size=13, overlap=1):
         csv_writer = csv.writer(csv_file)
 
         images = os.listdir(image_dir)
-        images = images[:25000]
+        images = images[:238143]
         for image_name in images:
             if image_name.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
                 image_path = os.path.join(image_dir, image_name)
                 
                 try:
-                    central_pixels = preprocess_image(image_path, section_size, overlap)
+                    central_pixels = preprocess_image(image_dir, image_path, section_size, overlap)
                     
                     for pixel in central_pixels:
                         csv_writer.writerow([image_name] + pixel)
@@ -299,7 +299,7 @@ def process_all_images(image_dir, csv_path, section_size=13, overlap=1):
 
 # csv_file_path_test = "test.csv"
 # image_directory_test = "test/"
-image_directory_train = "train/"
+image_directory_train = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train"
 csv_file_path_train = "data.csv"
 
 # process_all_images(image_directory_test, csv_file_path_test)
@@ -367,14 +367,15 @@ def rename_png_files(directory):
 # rename_png_files(r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train")
 
 def create_csv_train(csv_path, train_dir):
-    max_images = 25000
+    max_images = 238144
     image_files = [f for f in os.listdir(train_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
-    image_files.sort(key=lambda x: extract_numbers(os.path.basename(x)))
+
+    image_files.sort(key=extract_numbers)
+
     image_files = image_files[:max_images]
 
     with open(csv_path, mode='w', newline='') as csv_file:
         csv_writer = csv.writer(csv_file)
-
         csv_writer.writerow(['image_name', 'label_a', 'label_b'])
 
         for image_name in image_files:
@@ -384,6 +385,7 @@ def create_csv_train(csv_path, train_dir):
                 if image is None:
                     raise ValueError(f"Bild an Pfad '{image_path}' konnte nicht gelesen werden.")
 
+                lab_image = cv2.cvtColor(image, cv2.COLOR_RGB2Lab)
                 _, A, B = cv2.split(lab_image)
 
                 central_a = A[6, 6]
@@ -397,11 +399,9 @@ def create_csv_train(csv_path, train_dir):
             except Exception as e:
                 print(f"Fehler bei der Verarbeitung von {image_name}: {e}")
 
-            lab_image = cv2.cvtColor(image, cv2.COLOR_BGR2Lab)
-
-section_directory = "train/"
+section_directory = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train"
 csv_file = "data.csv"
-# create_csv_train(csv_file, section_directory)
+create_csv_train(csv_file, section_directory)
 
 def extract_l_channel_and_save_to_csv(section_dir, csv_path, max_images=10000):
     image_files = [f for f in os.listdir(section_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
