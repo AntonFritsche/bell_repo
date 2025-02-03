@@ -127,7 +127,7 @@ for epoch in range(num_epochs):
     print(f"Epoch {epoch+1}/{num_epochs}")
     print(f"rescaled targets: {[round(val, 4) for val in rescaled_targets[0].tolist()]}")
     print(f"rescaled outputs: {[round(val, 4) for val in rescaled_outputs[0].tolist()]}")
-    print(f"Loss: {running_loss/len(train_loader):.4f}")
+    print(f"Training Loss: {running_loss/len(train_loader):.4f}")
 
     # Validation (optional)
     conv_model.eval()
