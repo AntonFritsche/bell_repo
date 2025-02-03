@@ -91,7 +91,7 @@ def rebuild_rows(
 
         image_files = [f for f in os.listdir(temp_folder_images) if
                        f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
-        image_files.sort(key=lambda image_file: extract_numbers(os.path.basename(image_file)))
+        sorted(image_files, key=lambda f: (extract_numbers(f)[1], extract_numbers(f)[0]))
 
         start_idx = idx * num_sections_per_row
         end_idx = start_idx + num_sections_per_row
@@ -113,11 +113,12 @@ def rebuild_rows(
                 # print(f"Tensor erfolgreich erstellt für {section_path}")
 
                 section_pred = conv_model(section_tensor)
+                prediction_rescaled = torch.mul(section_pred, 128)
                 if section_pred is None:
                     print(f"Fehler: Modell liefert keine Ausgabe für {section_path}")
                     break
 
-                section_reconstructed = create_image_from_predictions(section_image, section_pred)
+                section_reconstructed = create_image_from_predictions(section_image, prediction_rescaled)
                 if section_reconstructed is None or section_reconstructed.size == 0:
                     print(f"Fehler: Rekonstruktion für {section_path} fehlgeschlagen.")
                     break
@@ -188,10 +189,6 @@ def rebuild_image(row_ordner, target_height=500):
 
 # preprocess_image_rebuild()
 
-# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 0, 100)
-# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 100, 200)
-# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 200, 300)
-# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 300, 400)
-# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 400, 488)
+rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 0, 488)
 
 rebuild_image(temp_folder_rows)
