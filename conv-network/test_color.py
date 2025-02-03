@@ -113,12 +113,11 @@ def rebuild_rows(
                 # print(f"Tensor erfolgreich erstellt für {section_path}")
 
                 section_pred = conv_model(section_tensor)
-                prediction_rescaled = torch.mul(section_pred, 128)
                 if section_pred is None:
                     print(f"Fehler: Modell liefert keine Ausgabe für {section_path}")
                     break
 
-                section_reconstructed = create_image_from_predictions(section_image, prediction_rescaled)
+                section_reconstructed = create_image_from_predictions(section_image, section_pred)
                 if section_reconstructed is None or section_reconstructed.size == 0:
                     print(f"Fehler: Rekonstruktion für {section_path} fehlgeschlagen.")
                     break
@@ -179,7 +178,7 @@ def rebuild_image(row_ordner, target_height=500):
     # Falls das Bild nach dem Stacking noch zu hoch ist, resize auf 500px Höhe
     if final_image.shape[0] != 500:
         print(f"Finale Bildgröße: {final_image.shape} - Resizing auf (500,500)")
-        final_image = cv2.resize(final_image, (500, 500), interpolation=cv2.INTER_AREA)
+        #final_image = cv2.resize(final_image, (500, 500), interpolation=cv2.INTER_AREA)
 
     cv2.imwrite("image.png", final_image)
     print("Reconstructed image: image.png")
@@ -189,6 +188,6 @@ def rebuild_image(row_ordner, target_height=500):
 
 # preprocess_image_rebuild()
 
-rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 0, 488)
+# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 0, 488)
 
 rebuild_image(temp_folder_rows)
