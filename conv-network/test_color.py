@@ -160,7 +160,7 @@ def rebuild_image(row_ordner, target_height=500):
         if index == 486:
             all_rows.append(row_image)
         else:
-            row_image = row_image[13, 0:14]
+            row_image = row_image[:, 12]
             all_rows.append(row_image)
 
         # if index > 0:
@@ -192,4 +192,4 @@ def rebuild_image(row_ordner, target_height=500):
 
 # rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 0, 488)
 
-rebuild_image(temp_folder_rows)
+# rebuild_image(temp_folder_rows)
