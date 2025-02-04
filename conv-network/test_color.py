@@ -157,21 +157,23 @@ def rebuild_image(row_ordner, target_height=500):
             print(f"Fehler: Konnte {row_path} nicht lesen.")
             continue
 
-        # Stelle sicher, dass jede Zeile genau 13 Pixel hoch ist
-        if row_image.shape[0] != 13:
-            print(f"Warnung: Zeile {row_file} hat Höhe {row_image.shape[0]} statt 13. Resizing...")
-            row_image = cv2.resize(row_image, (row_image.shape[1], 13), interpolation=cv2.INTER_AREA)
+        if index == 486:
+            all_rows.append(row_image)
+        else:
+            row_image = row_image[13, 0:14]
+            all_rows.append(row_image)
 
-        if index > 0:
-            overlap_pixel1 = all_rows[-1][-1:, :, :]
-            overlap_pixel2 = row_image[:1, :, :]
-            average_overlap = (overlap_pixel1.astype(np.float64) + overlap_pixel2.astype(np.float64)) // 2
-            average_overlap = average_overlap.astype(np.uint8)
+        # if index > 0:
+            # last_row = all_rows[-1]
+            # overlap_pixel1 = last_row[-1:, :, :]
+            # overlap_pixel2 = row_image[:1, :, :]
+            # average_overlap = (overlap_pixel1.astype(np.float64) + overlap_pixel2.astype(np.float64)) // 2
+            # average_overlap = average_overlap.astype(np.uint8)
 
-            all_rows[-1][-1:, :, :] = average_overlap
-            row_image[:1, :, :] = average_overlap
+            # all_rows[-1][-1:, :, :] = average_overlap
+            # row_image[:1, :, :] = average_overlap
 
-        all_rows.append(row_image)
+        # all_rows.append(row_image)
 
     final_image = cv2.vconcat(all_rows)
 
