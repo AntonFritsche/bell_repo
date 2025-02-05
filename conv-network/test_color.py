@@ -99,7 +99,7 @@ def rebuild_rows(
 
         row_images = []
 
-        for idx, section_file in enumerate(row_sections):
+        for index, section_file in enumerate(row_sections):
             section_path = os.path.join(temp_folder_images, section_file)
 
             section_image = cv2.imread(section_path, cv2.IMREAD_GRAYSCALE)
@@ -120,17 +120,18 @@ def rebuild_rows(
                 print(f"Fehler: Rekonstruktion für {section_path} fehlgeschlagen.")
                 break
 
-            if idx == 486:
-                section_reconstructed = section_reconstructed[:12, :]
-                row_images.append(section_reconstructed)
+            if index == 486:
+                section_reconstructed_left = section_reconstructed[:, :12]
+                section_reconstructed_right = section_reconstructed[:, -1:]
+                # print(section_reconstructed.shape)
+                row_images.append(section_reconstructed_left)
             else:
-                section_reconstructed = section_reconstructed[12, :]
+                section_reconstructed = section_reconstructed[:, :1]
+                # print(section_reconstructed.shape)
                 row_images.append(section_reconstructed)
 
         row = np.hstack(row_images)
-
-        # if row.shape[1] != target_row_width:
-            # row = cv2.resize(row, (target_row_width, section_size), interpolation=cv2.INTER_AREA)
+        row = np.hstack((row, section_reconstructed_right))
 
         row_path = os.path.join(temp_folder_rows, f"row_{idx}.png")
         cv2.imwrite(row_path, row)
@@ -147,6 +148,7 @@ def rebuild_image(row_ordner, target_height=500):
     row_files = row_files[:target_height]
 
     all_rows = []
+    index = 0
 
     for index, row_file in enumerate(row_files):
         row_path = os.path.join(row_ordner, row_file)
@@ -157,30 +159,15 @@ def rebuild_image(row_ordner, target_height=500):
             continue
 
         if index == 486:
-            row_image = row_image[:, :12]
-            all_rows.append(row_image)
+            row_image_up = row_image[:12, :]
+            row_image_down = row_image[-1:, :]
+            all_rows.append(row_image_up)
         else:
-            row_image = row_image[:, 12]
+            row_image = row_image[:1, :]
             all_rows.append(row_image)
-
-        # if index > 0:
-            # last_row = all_rows[-1]
-            # overlap_pixel1 = last_row[-1:, :, :]
-            # overlap_pixel2 = row_image[:1, :, :]
-            # average_overlap = (overlap_pixel1.astype(np.float64) + overlap_pixel2.astype(np.float64)) // 2
-            # average_overlap = average_overlap.astype(np.uint8)
-
-            # all_rows[-1][-1:, :, :] = average_overlap
-            # row_image[:1, :, :] = average_overlap
-
-        # all_rows.append(row_image)
 
     final_image = cv2.vconcat(all_rows)
-
-    # Falls das Bild nach dem Stacking noch zu hoch ist, resize auf 500px Höhe
-    if final_image.shape[0] != 500:
-        print(f"Finale Bildgröße: {final_image.shape} - Resizing auf (500,500)")
-        #final_image = cv2.resize(final_image, (500, 500), interpolation=cv2.INTER_AREA)
+    final_image = cv2.vconcat((final_image, row_image_down))
 
     cv2.imwrite("image.png", final_image)
     print("Reconstructed image: image.png")
@@ -192,4 +179,4 @@ def rebuild_image(row_ordner, target_height=500):
 
 # rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 0, 488)
 
-# rebuild_image(temp_folder_rows)
+rebuild_image(temp_folder_rows)
