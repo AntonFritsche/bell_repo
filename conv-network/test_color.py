@@ -99,39 +99,38 @@ def rebuild_rows(
 
         row_images = []
 
-        for section_file in row_sections:
+        for idx, section_file in enumerate(row_sections):
             section_path = os.path.join(temp_folder_images, section_file)
-            try:
-                # print(f"Lade und verarbeite Bild: {section_path}")
 
-                section_image = cv2.imread(section_path, cv2.IMREAD_GRAYSCALE)
-                if section_image is None:
-                    print(f"Fehler: Bild {section_path} konnte nicht gelesen werden.")
-                    break
-
-                section_tensor = torch.from_numpy(section_image).float().unsqueeze(0).unsqueeze(0)
-                # print(f"Tensor erfolgreich erstellt für {section_path}")
-
-                section_pred = conv_model(section_tensor)
-                if section_pred is None:
-                    print(f"Fehler: Modell liefert keine Ausgabe für {section_path}")
-                    break
-
-                section_reconstructed = create_image_from_predictions(section_image, section_pred)
-                if section_reconstructed is None or section_reconstructed.size == 0:
-                    print(f"Fehler: Rekonstruktion für {section_path} fehlgeschlagen.")
-                    break
-
-                row_images.append(section_reconstructed)
-
-            except Exception as e:
-                print(f"Unerwarteter Fehler beim Verarbeiten des Bildes {section_path}: {e}")
+            section_image = cv2.imread(section_path, cv2.IMREAD_GRAYSCALE)
+            if section_image is None:
+                print(f"Fehler: Bild {section_path} konnte nicht gelesen werden.")
                 break
+
+            section_tensor = torch.from_numpy(section_image).float().unsqueeze(0).unsqueeze(0)
+            # print(f"Tensor erfolgreich erstellt für {section_path}")
+
+            section_pred = conv_model(section_tensor)
+            if section_pred is None:
+                print(f"Fehler: Modell liefert keine Ausgabe für {section_path}")
+                break
+
+            section_reconstructed = create_image_from_predictions(section_image, section_pred)
+            if section_reconstructed is None or section_reconstructed.size == 0:
+                print(f"Fehler: Rekonstruktion für {section_path} fehlgeschlagen.")
+                break
+
+            if idx == 486:
+                section_reconstructed = section_reconstructed[:12, :]
+                row_images.append(section_reconstructed)
+            else:
+                section_reconstructed = section_reconstructed[12, :]
+                row_images.append(section_reconstructed)
 
         row = np.hstack(row_images)
 
-        if row.shape[1] != target_row_width:
-            row = cv2.resize(row, (target_row_width, section_size), interpolation=cv2.INTER_AREA)
+        # if row.shape[1] != target_row_width:
+            # row = cv2.resize(row, (target_row_width, section_size), interpolation=cv2.INTER_AREA)
 
         row_path = os.path.join(temp_folder_rows, f"row_{idx}.png")
         cv2.imwrite(row_path, row)
@@ -158,6 +157,7 @@ def rebuild_image(row_ordner, target_height=500):
             continue
 
         if index == 486:
+            row_image = row_image[:, :12]
             all_rows.append(row_image)
         else:
             row_image = row_image[:, 12]
