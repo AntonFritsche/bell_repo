@@ -22,6 +22,7 @@ from dataset import preprocess_image
 from model import ConvModel
 import shutil
 import re
+from torchvision import transforms
 
 
 # load model from path with input from model.py
@@ -111,6 +112,11 @@ def rebuild_rows(
 
         row_images = []
 
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.5], std=[0.5])
+        ])
+
         for index, section_file in enumerate(row_sections):
             section_path = os.path.join(temp_folder_images, section_file)
 
@@ -120,6 +126,7 @@ def rebuild_rows(
                 break
 
             section_tensor = torch.from_numpy(section_image).float().unsqueeze(0).unsqueeze(0)
+            section_tensor = transform(section_tensor)
             # print(f"Tensor erfolgreich erstellt für {section_path}")
 
             section_pred = conv_model(section_tensor)
@@ -191,6 +198,7 @@ def rebuild_image(row_ordner, target_height=500):
 # rebuild_image(temp_folder_rows)
 
 
+# noinspection DuplicatedCode
 def rebuild_image_pxl_row(
         start_calc: int,
         end_calc: int,
@@ -213,6 +221,12 @@ def rebuild_image_pxl_row(
 
         row_images = []
 
+        # Transformation
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.5], std=[0.5])
+        ])
+
         for index, section_file in enumerate(row_sections):
             section_path = os.path.join(temp_folder_images, section_file)
 
@@ -222,6 +236,7 @@ def rebuild_image_pxl_row(
                 break
 
             section_tensor = torch.from_numpy(section_image).float().unsqueeze(0).unsqueeze(0)
+            section_tensor = transform(section_tensor)
             # print(f"Tensor erfolgreich erstellt für {section_path}")
 
             section_pred = conv_model(section_tensor)

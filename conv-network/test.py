@@ -3,6 +3,7 @@ import cv2
 from test_color import show_image
 from PIL import Image
 from matplotlib import pyplot as plt
+from torchvision import transforms
 
 def test_cuda():
     print(f"cuda 0 : {torch.device('cuda:0')}")
@@ -38,4 +39,19 @@ def test_cv2(row_path):
     # show_image("test_image_2.png")
     cv2.imshow("test_image", image_1)
 
-test_cv2(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png")
+# test_cv2(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png")
+
+def normalize_image():
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.5], std=[0.5])
+    ])
+
+    image = Image.open("cat.png")
+    # image = transform(image)
+    # image = image.cpu().detach().numpy()
+    # image = image.transpose(1, 2, 0)
+    plt.imshow(image)
+    plt.show()
+
+normalize_image()
