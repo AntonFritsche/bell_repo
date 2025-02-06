@@ -114,7 +114,7 @@ def rebuild_rows(
 
         transform = transforms.Compose([
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.5], std=[0.5])
+            # transforms.Normalize(mean=[0.5], std=[0.5])
         ])
 
         for index, section_file in enumerate(row_sections):
@@ -224,7 +224,7 @@ def rebuild_image_pxl_row(
         # Transformation
         transform = transforms.Compose([
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.5], std=[0.5])
+            # transforms.Normalize(mean=[0.5], std=[0.5])
         ])
 
         for index, section_file in enumerate(row_sections):

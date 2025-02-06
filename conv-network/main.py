@@ -34,7 +34,8 @@ loss_fn = nn.MSELoss() # Mean Squared Error: error is squared
 # loss_fn = nn.L1Loss() # Mean Absolute Error: error is absolute
 
 # Optimizers specified in the torch.optim package
-optimizer = torch.optim.Adam(conv_model.parameters(), lr=0.001)
+optimizer_adam = torch.optim.Adam(conv_model.parameters(), lr=0.001)
+optimizer_SGD = torch.optim.SGD(conv_model.parameters(), lr=0.001)
 
 def target_transform_func(target):
     target = torch.tensor(target, dtype=torch.float32)
@@ -70,7 +71,7 @@ class ABSectionDataset(Dataset):
 # Transformation
 transform = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.5], std=[0.5])
+    # transforms.Normalize(mean=[0.5], std=[0.5])
 ])
 
 csv_path = r"E:\Programmierung\Datein\Python\bell_repo\conv-network\data.csv"
@@ -78,7 +79,7 @@ data = pd.read_csv(csv_path)
 
 image_dir = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train"
 
-dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, transform_func=None, target_transform_param=target_transform_func)
+dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, transform_func=transform, target_transform_param=target_transform_func)
 
 # print(dataset)
 
@@ -90,8 +91,8 @@ val_size = len(subset) - train_size
 
 train_dataset, val_dataset = random_split(subset, [train_size, val_size])
 
-train_loader = DataLoader(train_dataset, batch_size=512, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=512, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=256, shuffle=False)
 
 num_epochs = 50
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -118,9 +119,9 @@ for epoch in range(num_epochs):
         loss = loss_fn(rescaled_outputs, rescaled_targets)
         training_loss_ot.append(loss.item()) # loss.item() returns the value of tensor as Python number
         # Backward pass and optimization
-        optimizer.zero_grad()
+        optimizer_adam.zero_grad()
         loss.backward()
-        optimizer.step()
+        optimizer_adam.step()
 
         running_loss += loss.item()
 
@@ -150,5 +151,5 @@ for epoch in range(num_epochs):
 elapsed_time = time() - start_time
 # noinspection PyUnboundLocalVariable
 print(f"Training time: {elapsed_time:.2f} seconds")
-model_path = r"saved-models/conv_model_leakyReLU.pth"
+model_path = r"saved-models/conv_model_leakyReLU_2.pth"
 torch.save(conv_model, model_path)

@@ -385,11 +385,11 @@ def create_csv_train(csv_path, train_dir):
                 if image is None:
                     raise ValueError(f"Bild an Pfad '{image_path}' konnte nicht gelesen werden.")
 
-                lab_image = cv2.cvtColor(image, cv2.COLOR_RGB2Lab)
+                lab_image = cv2.cvtColor(image, cv2.COLOR_BGR2Lab)
                 _, A, B = cv2.split(lab_image)
 
-                central_a = A[6, 6]
-                central_b = B[6, 6]
+                central_a = A[6, 6] - 128
+                central_b = B[6, 6] - 128
 
                 label_a = int(central_a)
                 label_b = int(central_b)
@@ -401,7 +401,7 @@ def create_csv_train(csv_path, train_dir):
 
 section_directory = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train"
 csv_file = "data.csv"
-# create_csv_train(csv_file, section_directory)
+create_csv_train(csv_file, section_directory)
 
 def extract_l_channel_and_save_to_csv(section_dir, csv_path, max_images=10000):
     image_files = [f for f in os.listdir(section_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
