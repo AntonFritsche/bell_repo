@@ -194,7 +194,7 @@ def rebuild_image(row_ordner, target_height=500):
     # shutil.rmtree(temp_folder_rows, ignore_errors=True)
 
 # preprocess_image_rebuild()
-# rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 0, 488)
+# rebuild_rows(0, 488)
 # rebuild_image(temp_folder_rows)
 
 
@@ -259,7 +259,7 @@ def rebuild_image_pxl_row(
         print(f"Row {idx} reconstructed and saved as {row_path}.")
 
 
-# noinspection PyTypeChecker
+# noinspection PyTypeChecker,DuplicatedCode
 def rebuild_image_pxl(row_ordner, target_height=487):
     row_files = [f for f in os.listdir(row_ordner) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
     row_files.sort(key=lambda image_file: extract_numbers(os.path.basename(image_file)))
@@ -287,5 +287,5 @@ def rebuild_image_pxl(row_ordner, target_height=487):
     # shutil.rmtree(temp_folder_images, ignore_errors=True)
     # shutil.rmtree(temp_folder_rows, ignore_errors=True)
 
-# rebuild_image_pxl_row(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 0, 488)
+rebuild_image_pxl_row(0, 488)
 # rebuild_image_pxl(temp_folder_rows)
