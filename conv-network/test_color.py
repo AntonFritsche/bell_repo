@@ -27,7 +27,7 @@ from torchvision import transforms
 
 # load model from path with input from model.py
 conv_model = ConvModel(1, 4, 4, 8, 8, 16, 16, 32, 32, 64, 64, 128, 128, 32, 32, 2)
-model_path = r"saved-models/conv_model_leakyReLU.pth"
+model_path = r"saved-models/conv_model_leakyReLU_2.pth"
 assert os.path.isfile(model_path), f"Model file not found at {model_path}"
 state_dict = torch.load(model_path, map_location='cpu')
 # conv_model.load_state_dict(state_dict)
@@ -79,11 +79,15 @@ def create_pxl_from_preds(input_image, prediction):
     a = a.detach().numpy()  # converts a prediction into numpy arrays
     b = b.detach().numpy()  # converts a prediction into numpy arrays
     # print(f"a: {a}, b: {b}")
-    l_channel = input_image[6, 6]
+    l_channel = input_image[0, 0, 6, 6]
     l_channel = l_channel
 
     a_channel = np.full_like(l_channel, a)
     b_channel = np.full_like(l_channel, b)
+
+    l_channel = l_channel.squeeze().cpu().numpy()
+    # a_channel = a_channel.squeeze().cpu().numpy()
+    # b_channel = b_channel.squeeze().cpu().numpy()
 
     image_pred = cv2.merge([l_channel, a_channel, b_channel])
     return image_pred
@@ -230,13 +234,16 @@ def rebuild_image_pxl_row(
         for index, section_file in enumerate(row_sections):
             section_path = os.path.join(temp_folder_images, section_file)
 
-            section_image = cv2.imread(section_path, cv2.IMREAD_GRAYSCALE)
+            section_image = Image.open(section_path)
+            section_image = section_image.convert("L")
             if section_image is None:
                 print(f"Fehler: Bild {section_path} konnte nicht gelesen werden.")
                 break
 
-            section_tensor = torch.from_numpy(section_image).float().unsqueeze(0).unsqueeze(0)
-            section_tensor = transform(section_tensor)
+            # section_tensor = torch.from_numpy(section_image).float().unsqueeze(0).unsqueeze(0)
+            section_tensor = transform(section_image)
+            section_tensor = section_tensor.unsqueeze(0)
+            # print(section_tensor.shape)
             # print(f"Tensor erfolgreich erstellt für {section_path}")
 
             section_pred = conv_model(section_tensor)
@@ -244,7 +251,7 @@ def rebuild_image_pxl_row(
                 print(f"Fehler: Modell liefert keine Ausgabe für {section_path}")
                 break
 
-            section_reconstructed = create_pxl_from_preds(section_image, section_pred)
+            section_reconstructed = create_pxl_from_preds(section_tensor, section_pred)
             if section_reconstructed is None or section_reconstructed.size == 0:
                 print(f"Fehler: Rekonstruktion für {section_path} fehlgeschlagen.")
                 break
@@ -287,5 +294,5 @@ def rebuild_image_pxl(row_ordner, target_height=487):
     # shutil.rmtree(temp_folder_images, ignore_errors=True)
     # shutil.rmtree(temp_folder_rows, ignore_errors=True)
 
-rebuild_image_pxl_row(0, 488)
-# rebuild_image_pxl(temp_folder_rows)
+# rebuild_image_pxl_row(0, 488)
+rebuild_image_pxl(temp_folder_rows)
