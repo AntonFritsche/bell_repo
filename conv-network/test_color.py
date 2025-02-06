@@ -72,19 +72,31 @@ def create_image_from_predictions(input_image, prediction):
     image_pred = cv2.merge([l_channel, a_channel, b_channel])
     return image_pred
 
+def create_pxl_from_preds(input_image, prediction):
+    prediction_rescaled = torch.mul(prediction, 128)  # scale the outputs back to lab color space
+    a, b = prediction_rescaled[0]
+    a = a.detach().numpy()  # converts a prediction into numpy arrays
+    b = b.detach().numpy()  # converts a prediction into numpy arrays
+    # print(f"a: {a}, b: {b}")
+    l_channel = input_image[6, 6]
+    l_channel = l_channel
+
+    a_channel = np.full_like(l_channel, a)
+    b_channel = np.full_like(l_channel, b)
+
+    image_pred = cv2.merge([l_channel, a_channel, b_channel])
+    return image_pred
+
 # rebuild the original image with the predicted colors of the network
-# noinspection DuplicatedCode,PyTypeChecker
+# noinspection DuplicatedCode,PyTypeChecker,PyUnboundLocalVariable
 def rebuild_rows(
-        image_to_predict: str,
         start_calc: int,
         end_calc: int,
         num_sections_per_row=487,
-        target_row_width=500,
-        section_size=13
 ) -> None:
     tensor_rows = torch.arange(start_calc, end_calc)  # Zeilennummern für die Rekonstruktion
     list_rows = tensor_rows.tolist()
-    print(f"list_rows : {list_rows[:20]}")
+    # print(f"list_rows : {list_rows[:20]}")
 
     for i in list_rows:
         idx = i
@@ -126,7 +138,7 @@ def rebuild_rows(
                 # print(section_reconstructed.shape)
                 row_images.append(section_reconstructed_left)
             else:
-                section_reconstructed = section_reconstructed[:, :1]
+                section_reconstructed = section_reconstructed[:, :0]
                 # print(section_reconstructed.shape)
                 row_images.append(section_reconstructed)
 
@@ -139,7 +151,7 @@ def rebuild_rows(
         print(f"Row {idx} reconstructed and saved as {row_path}.")
 
 
-# noinspection DuplicatedCode,PyTypeChecker
+# noinspection DuplicatedCode,PyTypeChecker,PyUnboundLocalVariable
 def rebuild_image(row_ordner, target_height=500):
     row_files = [f for f in os.listdir(row_ordner) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
     row_files.sort(key=lambda image_file: extract_numbers(os.path.basename(image_file)))
@@ -148,7 +160,6 @@ def rebuild_image(row_ordner, target_height=500):
     row_files = row_files[:target_height]
 
     all_rows = []
-    index = 0
 
     for index, row_file in enumerate(row_files):
         row_path = os.path.join(row_ordner, row_file)
@@ -163,7 +174,7 @@ def rebuild_image(row_ordner, target_height=500):
             row_image_down = row_image[-1:, :]
             all_rows.append(row_image_up)
         else:
-            row_image = row_image[:1, :]
+            row_image = row_image[:0, :]
             all_rows.append(row_image)
 
     final_image = cv2.vconcat(all_rows)
@@ -176,7 +187,90 @@ def rebuild_image(row_ordner, target_height=500):
     # shutil.rmtree(temp_folder_rows, ignore_errors=True)
 
 # preprocess_image_rebuild()
-
 # rebuild_rows(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 0, 488)
+# rebuild_image(temp_folder_rows)
 
-rebuild_image(temp_folder_rows)
+
+def rebuild_image_pxl_row(
+        start_calc: int,
+        end_calc: int,
+        num_sections_per_row=487,
+) -> None:
+    tensor_rows = torch.arange(start_calc, end_calc)  # Zeilennummern für die Rekonstruktion
+    list_rows = tensor_rows.tolist()
+    # print(f"list_rows : {list_rows[:20]}")
+
+    for i in list_rows:
+        idx = i
+
+        image_files = [f for f in os.listdir(temp_folder_images) if
+                       f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
+        sorted(image_files, key=lambda f: (extract_numbers(f)[1], extract_numbers(f)[0]))
+
+        start_idx = idx * num_sections_per_row
+        end_idx = start_idx + num_sections_per_row
+        row_sections = image_files[start_idx:end_idx]
+
+        row_images = []
+
+        for index, section_file in enumerate(row_sections):
+            section_path = os.path.join(temp_folder_images, section_file)
+
+            section_image = cv2.imread(section_path, cv2.IMREAD_GRAYSCALE)
+            if section_image is None:
+                print(f"Fehler: Bild {section_path} konnte nicht gelesen werden.")
+                break
+
+            section_tensor = torch.from_numpy(section_image).float().unsqueeze(0).unsqueeze(0)
+            # print(f"Tensor erfolgreich erstellt für {section_path}")
+
+            section_pred = conv_model(section_tensor)
+            if section_pred is None:
+                print(f"Fehler: Modell liefert keine Ausgabe für {section_path}")
+                break
+
+            section_reconstructed = create_pxl_from_preds(section_image, section_pred)
+            if section_reconstructed is None or section_reconstructed.size == 0:
+                print(f"Fehler: Rekonstruktion für {section_path} fehlgeschlagen.")
+                break
+
+            row_images.append(section_reconstructed)
+
+        row = np.hstack(row_images)
+
+        row_path = os.path.join(temp_folder_rows, f"row_{idx}.png")
+        cv2.imwrite(row_path, row)
+
+        print(f"Row {idx} reconstructed and saved as {row_path}.")
+
+
+# noinspection PyTypeChecker
+def rebuild_image_pxl(row_ordner, target_height=487):
+    row_files = [f for f in os.listdir(row_ordner) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
+    row_files.sort(key=lambda image_file: extract_numbers(os.path.basename(image_file)))
+
+    # Begrenze die Zeilen auf max. 500
+    row_files = row_files[:target_height]
+
+    all_rows = []
+
+    for index, row_file in enumerate(row_files):
+        row_path = os.path.join(row_ordner, row_file)
+        row_image = cv2.imread(row_path)
+
+        if row_image is None:
+            print(f"Fehler: Konnte {row_path} nicht lesen.")
+            continue
+
+        all_rows.append(row_image)
+
+    final_image = cv2.vconcat(all_rows)
+
+    cv2.imwrite("image.png", final_image)
+    print("Reconstructed image: image.png")
+    show_image("image.png")
+    # shutil.rmtree(temp_folder_images, ignore_errors=True)
+    # shutil.rmtree(temp_folder_rows, ignore_errors=True)
+
+# rebuild_image_pxl_row(r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png", 0, 488)
+# rebuild_image_pxl(temp_folder_rows)
