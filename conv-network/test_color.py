@@ -79,7 +79,7 @@ def create_pxl_from_preds(input_image, prediction):
     a = a.detach().numpy()  # converts a prediction into numpy arrays
     b = b.detach().numpy()  # converts a prediction into numpy arrays
     # print(f"a: {a}, b: {b}")
-    l_channel = input_image[0, 0, 6, 6]
+    l_channel = input_image
     l_channel = l_channel
 
     a_channel = np.full_like(l_channel, a)
@@ -90,6 +90,7 @@ def create_pxl_from_preds(input_image, prediction):
     # b_channel = b_channel.squeeze().cpu().numpy()
 
     image_pred = cv2.merge([l_channel, a_channel, b_channel])
+    image_pred = image_pred[6, 6]
     return image_pred
 
 # rebuild the original image with the predicted colors of the network
