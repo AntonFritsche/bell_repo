@@ -74,22 +74,26 @@ def create_image_from_predictions(input_image, prediction):
     return image_pred
 
 def create_pxl_from_preds(input_image, prediction):
-    prediction_rescaled = torch.mul(prediction, 128)  # scale the outputs back to lab color space
+    prediction_rescaled = torch.mul(prediction, 128)
     a, b = prediction_rescaled[0]
-    a = a.detach().numpy()  # converts a prediction into numpy arrays
-    b = b.detach().numpy()  # converts a prediction into numpy arrays
-    # print(f"a: {a}, b: {b}")
-    l_channel = input_image[0, 0, 6, 6]
-    l_channel = l_channel
+    a = a.detach().numpy()
+    b = b.detach().numpy()
 
+    l_channel = input_image[6, 6]
     a_channel = np.full_like(l_channel, a)
     b_channel = np.full_like(l_channel, b)
 
-    l_channel = l_channel.squeeze().cpu().numpy()
-    # a_channel = a_channel.squeeze().cpu().numpy()
-    # b_channel = b_channel.squeeze().cpu().numpy()
+    l_channel = np.expand_dims(l_channel, axis=-1)
+    a_channel = np.expand_dims(a_channel, axis=-1)
+    b_channel = np.expand_dims(b_channel, axis=-1)
 
+    l_channel = l_channel.astype(np.float32)
+    a_channel = a_channel.astype(np.float32)
+    b_channel = b_channel.astype(np.float32)
+
+    # print("Shapes:", l_channel.shape, a_channel.shape, b_channel.shape)
     image_pred = cv2.merge([l_channel, a_channel, b_channel])
+
     return image_pred
 
 # rebuild the original image with the predicted colors of the network
@@ -116,11 +120,6 @@ def rebuild_rows(
 
         row_images = []
 
-        transform = transforms.Compose([
-            transforms.ToTensor(),
-            # transforms.Normalize(mean=[0.5], std=[0.5])
-        ])
-
         for index, section_file in enumerate(row_sections):
             section_path = os.path.join(temp_folder_images, section_file)
 
@@ -130,7 +129,6 @@ def rebuild_rows(
                 break
 
             section_tensor = torch.from_numpy(section_image).float().unsqueeze(0).unsqueeze(0)
-            section_tensor = transform(section_tensor)
             # print(f"Tensor erfolgreich erstellt für {section_path}")
 
             section_pred = conv_model(section_tensor)
@@ -225,24 +223,15 @@ def rebuild_image_pxl_row(
 
         row_images = []
 
-        # Transformation
-        transform = transforms.Compose([
-            transforms.ToTensor(),
-            # transforms.Normalize(mean=[0.5], std=[0.5])
-        ])
-
         for index, section_file in enumerate(row_sections):
             section_path = os.path.join(temp_folder_images, section_file)
 
-            section_image = Image.open(section_path)
-            section_image = section_image.convert("L")
+            section_image = cv2.imread(section_path, cv2.IMREAD_GRAYSCALE)
             if section_image is None:
                 print(f"Fehler: Bild {section_path} konnte nicht gelesen werden.")
                 break
 
-            # section_tensor = torch.from_numpy(section_image).float().unsqueeze(0).unsqueeze(0)
-            section_tensor = transform(section_image)
-            section_tensor = section_tensor.unsqueeze(0)
+            section_tensor = torch.from_numpy(section_image).float().unsqueeze(0).unsqueeze(0)
             # print(section_tensor.shape)
             # print(f"Tensor erfolgreich erstellt für {section_path}")
 
@@ -251,7 +240,7 @@ def rebuild_image_pxl_row(
                 print(f"Fehler: Modell liefert keine Ausgabe für {section_path}")
                 break
 
-            section_reconstructed = create_pxl_from_preds(section_tensor, section_pred)
+            section_reconstructed = create_pxl_from_preds(section_image, section_pred)
             if section_reconstructed is None or section_reconstructed.size == 0:
                 print(f"Fehler: Rekonstruktion für {section_path} fehlgeschlagen.")
                 break
