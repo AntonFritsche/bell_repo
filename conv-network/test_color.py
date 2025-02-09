@@ -54,7 +54,8 @@ def show_image(input_image):
     plt.show()
 
 def extract_numbers(filename):
-    return [int(num) for num in re.findall(r'\d+', filename)]
+    numbers = re.findall(r'\d+', filename)
+    return tuple(map(int, numbers)) if numbers else (0,)
 
 # creates an LAB image from the predictions of the model and returns it
 def create_image_from_predictions(input_image, prediction):
@@ -112,7 +113,8 @@ def rebuild_rows(
 
         image_files = [f for f in os.listdir(temp_folder_images) if
                        f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
-        sorted(image_files, key=lambda f: (extract_numbers(f)[1], extract_numbers(f)[0]))
+        image_files.sort(key=extract_numbers)
+
 
         start_idx = idx * num_sections_per_row
         end_idx = start_idx + num_sections_per_row
@@ -209,17 +211,20 @@ def rebuild_image_pxl_row(
     tensor_rows = torch.arange(start_calc, end_calc)  # Zeilennummern für die Rekonstruktion
     list_rows = tensor_rows.tolist()
     # print(f"list_rows : {list_rows[:20]}")
-
+    add_index = 0
     for i in list_rows:
         idx = i
 
         image_files = [f for f in os.listdir(temp_folder_images) if
                        f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
-        sorted(image_files, key=lambda f: (extract_numbers(f)[1], extract_numbers(f)[0]))
+        image_files.sort(key=extract_numbers)
 
         start_idx = idx * num_sections_per_row
+        start_idx += add_index
+
         end_idx = start_idx + num_sections_per_row
         row_sections = image_files[start_idx:end_idx]
+        print(f"start idx: {start_idx}, end idx: {end_idx}")
 
         row_images = []
 
@@ -252,13 +257,15 @@ def rebuild_image_pxl_row(
         row_path = os.path.join(temp_folder_rows, f"row_{idx}.png")
         cv2.imwrite(row_path, row)
 
+        add_index += 1
         print(f"Row {idx} reconstructed and saved as {row_path}.")
 
 
 # noinspection PyTypeChecker,DuplicatedCode
 def rebuild_image_pxl(row_ordner, target_height=487):
     row_files = [f for f in os.listdir(row_ordner) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
-    row_files.sort(key=lambda image_file: extract_numbers(os.path.basename(image_file)))
+    row_files.sort(key=extract_numbers)
+    print(row_files[:20])
 
     # Begrenze die Zeilen auf max. 500
     row_files = row_files[:target_height]
@@ -276,8 +283,14 @@ def rebuild_image_pxl(row_ordner, target_height=487):
         all_rows.append(row_image)
 
     final_image = cv2.vconcat(all_rows)
+    final_image = np.fliplr(final_image)
 
     cv2.imwrite("image.png", final_image)
+
+    final_image = Image.open("image.png")
+    final_image = final_image.rotate(90)
+    final_image.save("image.png")
+
     print("Reconstructed image: image.png")
     show_image("image.png")
     # shutil.rmtree(temp_folder_images, ignore_errors=True)
