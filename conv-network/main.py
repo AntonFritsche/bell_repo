@@ -79,7 +79,7 @@ data = pd.read_csv(csv_path)
 
 image_dir = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train"
 
-dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, transform_func=transform, target_transform_param=target_transform_func)
+dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, transform_func=None, target_transform_param=target_transform_func)
 
 # print(dataset)
 
