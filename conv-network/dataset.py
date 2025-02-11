@@ -401,7 +401,7 @@ def create_csv_train(csv_path, train_dir):
 
 section_directory = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train"
 csv_file = "data.csv"
-# create_csv_train(csv_file, section_directory)
+create_csv_train(csv_file, section_directory)
 
 def extract_l_channel_and_save_to_csv(section_dir, csv_path, max_images=10000):
     image_files = [f for f in os.listdir(section_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]

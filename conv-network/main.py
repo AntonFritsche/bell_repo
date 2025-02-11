@@ -1,13 +1,14 @@
 import os
+from time import time
+
+import cv2
 import numpy as np
 import pandas as pd
 import torch as torch
 import torch.nn as nn
-from PIL import Image
 from torch.utils.data import DataLoader, random_split, Dataset
 from torch.utils.data import Subset
 from torchvision import transforms
-from time import time
 
 import model
 
@@ -17,17 +18,9 @@ print(conv_model)
 
 # list of parameters
 params = list(conv_model.parameters())
-print("length parameters: ", len(params))
 total_params = sum(
     param.numel() for param in conv_model.parameters()
 )
-print("total parameters: ", total_params)
-print("output_size: ", params[0].size(), "\n")
-
-# test input for network
-# x = torch.randn(size=(32, 3, 13, 13)) # 1 image with 3 channels and 13x13 pixels
-# print("x:", x)
-# print("x_prediction: ", (conv_model(x)))
 
 # Loss function
 loss_fn = nn.MSELoss() # Mean Squared Error: error is squared
@@ -54,11 +47,9 @@ class ABSectionDataset(Dataset):
 
     def __getitem__(self, idx):
         img_path = os.path.join(self.image_dir, self.data.iloc[idx, 0])
-        
-        image = Image.open(img_path)
 
-        if image.mode != "L":
-            image = image.convert("L")
+        # noinspection PyTypeChecker
+        image = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
 
         label = self.data.iloc[idx, 1:3].values.astype(np.float32)
 
@@ -79,11 +70,11 @@ data = pd.read_csv(csv_path)
 
 image_dir = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train"
 
-dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, transform_func=None, target_transform_param=target_transform_func)
+dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, transform_func=transform, target_transform_param=target_transform_func)
 
 # print(dataset)
 
-subset_indices = list(range(238144))
+subset_indices = list(range(5000))
 subset = Subset(dataset, subset_indices)
 
 train_size = int(0.9 * len(subset))
@@ -91,8 +82,15 @@ val_size = len(subset) - train_size
 
 train_dataset, val_dataset = random_split(subset, [train_size, val_size])
 
-train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=256, shuffle=False)
+print("length parameters: ", len(params))
+print("total parameters: ", total_params)
+print("output_size: ", params[0].size())
+
+batch_size = 32
+num_workers = 0
+
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
 num_epochs = 50
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -101,6 +99,7 @@ start_time = time()
 training_loss_ot = [] # list for training loss over time
 validation_loss_ot = [] # list for validation loss over time
 
+
 for epoch in range(num_epochs):
     epoch_time = time()
     conv_model.train()
@@ -108,9 +107,6 @@ for epoch in range(num_epochs):
     for images, targets in train_loader:
         # noinspection DuplicatedCode
         images, targets = images.to(device), targets.to(device)
-        # print(f"images.shape: {images.shape}")
-        # Forward pass
-        # print(images[:1][:1])
         outputs = conv_model(images)
 
         rescaled_outputs = torch.mul(outputs, 128) # scale the outputs back to lab color space
@@ -148,6 +144,7 @@ for epoch in range(num_epochs):
     print(f"Validation Loss: {val_loss/len(val_loader):.4f}")
     print(f"Epoch time: {time() - epoch_time:.2f} seconds")
     print("\n")
+
 elapsed_time = time() - start_time
 # noinspection PyUnboundLocalVariable
 print(f"Training time: {elapsed_time:.2f} seconds")
