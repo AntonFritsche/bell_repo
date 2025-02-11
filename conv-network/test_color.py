@@ -67,8 +67,8 @@ def create_pxl_from_preds(input_image, prediction):
     b_channel = np.full_like(l_channel, b)
 
     l_channel = np.expand_dims(l_channel, axis=-1)
-    a_channel = np.expand_dims(a_channel, axis=-1)
-    b_channel = np.expand_dims(b_channel, axis=-1)
+    a_channel = np.expand_dims(a_channel, axis=-1) + 128
+    b_channel = np.expand_dims(b_channel, axis=-1) + 128
 
     l_channel = l_channel.astype(np.float32)
     a_channel = a_channel.astype(np.float32)
