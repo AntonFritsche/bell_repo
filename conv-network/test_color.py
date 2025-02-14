@@ -27,10 +27,9 @@ from numpy import asarray
 
 # load model from path with input from model.py
 conv_model = ConvModel(1, 4, 4, 8, 8, 16, 16, 32, 32, 64, 64, 128, 128, 32, 32, 2)
-model_path = r"saved-models/conv_model_leakyReLU_2.pth"
+model_path = r"saved-models/conv_model_leakyReLU_3.pth"
 assert os.path.isfile(model_path), f"Model file not found at {model_path}"
-state_dict = torch.load(model_path, map_location='cpu')
-# conv_model.load_state_dict(state_dict)
+state_dict = torch.load(model_path, map_location='cpu', weights_only=False)
 conv_model.eval()
 
 temp_folder_images = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\temp_folder_images"
@@ -46,7 +45,7 @@ def preprocess_image_rebuild():
         preprocess_image(temp_folder_images, r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png")
 
 def show_image(input_image):
-    image = Image.open(input_image)
+    image = cv2.imread(input_image)
     plt.imshow(image)
     plt.axis('off')
     plt.title("Reconstructed Image")
@@ -57,7 +56,7 @@ def extract_numbers(filename):
     return tuple(map(int, numbers)) if numbers else (0,)
 
 def create_pxl_from_preds(input_image, prediction):
-    prediction_rescaled = torch.mul(prediction, 255) - 128
+    prediction_rescaled = torch.mul(prediction, 128)
     a, b = prediction_rescaled[0]
     a = a.detach().numpy()
     b = b.detach().numpy()
@@ -67,8 +66,8 @@ def create_pxl_from_preds(input_image, prediction):
     b_channel = np.full_like(l_channel, b)
 
     l_channel = np.expand_dims(l_channel, axis=-1)
-    a_channel = np.expand_dims(a_channel, axis=-1) + 128
-    b_channel = np.expand_dims(b_channel, axis=-1) + 128
+    a_channel = np.expand_dims(a_channel, axis=-1)
+    b_channel = np.expand_dims(b_channel, axis=-1)
 
     l_channel = l_channel.astype(np.float32)
     a_channel = a_channel.astype(np.float32)

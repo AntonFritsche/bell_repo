@@ -74,7 +74,7 @@ dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, transfo
 
 # print(dataset)
 
-subset_indices = list(range(5000))
+subset_indices = list(range(8000))
 subset = Subset(dataset, subset_indices)
 
 train_size = int(0.9 * len(subset))
@@ -148,5 +148,5 @@ for epoch in range(num_epochs):
 elapsed_time = time() - start_time
 # noinspection PyUnboundLocalVariable
 print(f"Training time: {elapsed_time:.2f} seconds")
-model_path = r"saved-models/conv_model_leakyReLU_2.pth"
+model_path = r"saved-models/conv_model_leakyReLU_3.pth"
 torch.save(conv_model, model_path)
