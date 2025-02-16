@@ -22,7 +22,6 @@ from model import ConvModel
 import shutil
 import re
 from numpy import asarray
-from dataset import preprocess_image
 
 
 # load model from path with input from model.py
@@ -40,6 +39,7 @@ def preprocess_image_rebuild():
     shutil.rmtree(temp_folder_rows, ignore_errors=True)
     os.makedirs(temp_folder_images)
     os.makedirs(temp_folder_rows)
+    from dataset import preprocess_image
 
     if len(os.listdir(temp_folder_images)) == 0:
         preprocess_image(temp_folder_images, r"E:\Programmierung\Datein\Python\bell_repo\conv-network\1.png")
@@ -62,6 +62,7 @@ def create_pxl_from_preds(input_image, prediction):
     b = b.detach().numpy()
 
     l_channel = input_image[6, 6]
+    l_channel = l_channel * (100/255)
     a_channel = np.full_like(l_channel, a)
     b_channel = np.full_like(l_channel, b)
 
@@ -74,6 +75,7 @@ def create_pxl_from_preds(input_image, prediction):
     b_channel = b_channel.astype(np.float32)
 
     image_pred = cv2.merge([l_channel, a_channel, b_channel])
+    print(image_pred[:5])
 
     return image_pred
 
@@ -166,6 +168,6 @@ def rebuild_image_pxl(row_ordner, target_height=487):
     print("Reconstructed image: image.png")
     show_image("image.png")
 
-preprocess_image_rebuild()
+# preprocess_image_rebuild()
 rebuild_image_pxl_row(0, 488)
 rebuild_image_pxl(temp_folder_rows)
