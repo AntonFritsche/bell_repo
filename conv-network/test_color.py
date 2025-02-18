@@ -62,20 +62,17 @@ def create_pxl_from_preds(input_image, prediction):
     b = b.detach().numpy()
 
     l_channel = input_image[6, 6]
-    l_channel = l_channel * (100/255)
-    a_channel = np.full_like(l_channel, a)
-    b_channel = np.full_like(l_channel, b)
 
-    l_channel = np.expand_dims(l_channel, axis=-1)
-    a_channel = np.expand_dims(a_channel, axis=-1)
-    b_channel = np.expand_dims(b_channel, axis=-1)
+    a_channel = np.full((1, 1), a, dtype=np.float32)
+    b_channel = np.full((1, 1), b, dtype=np.float32)
+    l_channel = np.full((1, 1), l_channel, dtype=np.float32)
 
-    l_channel = l_channel.astype(np.float32)
+    l_channel = (l_channel / 255 * 100).astype(np.float32)
     a_channel = a_channel.astype(np.float32)
     b_channel = b_channel.astype(np.float32)
 
     image_pred = cv2.merge([l_channel, a_channel, b_channel])
-    print(image_pred[:5])
+    # print(image_pred[:1])
 
     return image_pred
 
@@ -147,6 +144,7 @@ def rebuild_image_pxl(row_ordner, target_height=487):
     for index, row_file in enumerate(row_files):
         row_path = os.path.join(row_ordner, row_file)
         row_image = cv2.imread(row_path)
+        row_image = cv2.cvtColor(row_image, cv2.COLOR_BGR2LAB)
 
         if row_image is None:
             print(f"Fehler: Konnte {row_path} nicht lesen.")
@@ -159,11 +157,10 @@ def rebuild_image_pxl(row_ordner, target_height=487):
 
     cv2.imwrite("image.png", final_image)
 
-    final_image = Image.open("image.png")
-    final_image_np = asarray(final_image)
-    # print(final_image_np)
-    final_image = final_image.rotate(90)
-    final_image.save("image.png")
+    final_image = cv2.imread("image.png", cv2.IMREAD_UNCHANGED)
+    final_image = cv2.cvtColor(final_image, cv2.COLOR_BGR2LAB)
+    final_image = cv2.rotate(final_image, cv2.ROTATE_90_CLOCKWISE)
+    final_image = cv2.imwrite("image.png", final_image)
 
     print("Reconstructed image: image.png")
     show_image("image.png")

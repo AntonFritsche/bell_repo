@@ -59,7 +59,7 @@ def normalize_image():
 
 def test_lab_cv2():
     a = -128
-    b = 127
+    b = 128
     l_channel = 100
 
     height, width = 100, 100
@@ -68,9 +68,9 @@ def test_lab_cv2():
     b_channel = np.full((height, width), b, dtype=np.float32)
     l_channel = np.full((height, width), l_channel, dtype=np.float32)
 
-    l_channel = (l_channel * 255 / 100).astype(np.float32)
-    a_channel = (a_channel + 128).astype(np.float32)
-    b_channel = (b_channel + 128).astype(np.float32)
+    l_channel = l_channel.astype(np.float32)
+    a_channel = a_channel.astype(np.float32)
+    b_channel = b_channel.astype(np.float32)
 
     image_pred = cv2.merge([l_channel, a_channel, b_channel])
     cv2.imwrite("test_lab.png", image_pred)
