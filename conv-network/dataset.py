@@ -386,7 +386,8 @@ def create_csv_train(csv_path, train_dir):
                     raise ValueError(f"Bild an Pfad '{image_path}' konnte nicht gelesen werden.")
 
                 lab_image = cv2.cvtColor(image, cv2.COLOR_BGR2Lab)
-                _, A, B = cv2.split(lab_image)
+                A = cv2.extractChannel(lab_image, 1)
+                B = cv2.extractChannel(lab_image, 2)
 
                 central_a = A[6, 6] - 128
                 central_b = B[6, 6] - 128

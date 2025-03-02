@@ -6,6 +6,9 @@ from matplotlib import pyplot as plt
 from torchvision import transforms
 import numpy as np
 
+from torchsummary import summary
+import model
+
 def test_cuda():
     print(f"cuda 0 : {torch.device('cuda:0')}")
     print(f"cuda 1 : {torch.device('cuda:1')}")
@@ -75,4 +78,7 @@ def test_lab_cv2():
     image_pred = cv2.merge([l_channel, a_channel, b_channel])
     cv2.imwrite("test_lab.png", image_pred)
 
-test_lab_cv2()
+# test_lab_cv2()
+
+conv_model = model.ConvModel(1, 4, 4, 8, 8, 16, 16, 32, 32, 64, 64, 128, 128, 32, 32, 2)
+summary(conv_model, (1, 13, 13))

@@ -26,7 +26,7 @@ from numpy import asarray
 
 # load model from path with input from model.py
 conv_model = ConvModel(1, 4, 4, 8, 8, 16, 16, 32, 32, 64, 64, 128, 128, 32, 32, 2)
-model_path = r"saved-models/conv_model_leakyReLU_3.pth"
+model_path = r"saved-models/conv_model_leakyReLU_4.pth"
 assert os.path.isfile(model_path), f"Model file not found at {model_path}"
 state_dict = torch.load(model_path, map_location='cpu', weights_only=False)
 conv_model.eval()
@@ -35,14 +35,14 @@ temp_folder_images = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\temp_folder_i
 temp_folder_rows = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\temp_folder_rows"
 
 def preprocess_image_rebuild():
-    shutil.rmtree(temp_folder_images, ignore_errors=True)
-    shutil.rmtree(temp_folder_rows, ignore_errors=True)
+    # shutil.rmtree(temp_folder_images, ignore_errors=True)
+    # shutil.rmtree(temp_folder_rows, ignore_errors=True)
     os.makedirs(temp_folder_images)
     os.makedirs(temp_folder_rows)
     from dataset import preprocess_image
 
     if len(os.listdir(temp_folder_images)) == 0:
-        preprocess_image(temp_folder_images, r"E:\Programmierung\Datein\Python\bell_repo\conv-network\1.png")
+        preprocess_image(temp_folder_images, r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png")
 
 def show_image(input_image):
     image = cv2.imread(input_image)
@@ -157,7 +157,7 @@ def rebuild_image_pxl(row_ordner, target_height=487):
 
     cv2.imwrite("image.png", final_image)
 
-    final_image = cv2.imread("image.png", cv2.IMREAD_UNCHANGED)
+    final_image = cv2.imread("image.png")
     final_image = cv2.cvtColor(final_image, cv2.COLOR_BGR2LAB)
     final_image = cv2.rotate(final_image, cv2.ROTATE_90_CLOCKWISE)
     final_image = cv2.imwrite("image.png", final_image)
@@ -166,5 +166,5 @@ def rebuild_image_pxl(row_ordner, target_height=487):
     show_image("image.png")
 
 # preprocess_image_rebuild()
-rebuild_image_pxl_row(0, 488)
-rebuild_image_pxl(temp_folder_rows)
+# rebuild_image_pxl_row(0, 488)
+# rebuild_image_pxl(temp_folder_rows)

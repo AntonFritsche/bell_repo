@@ -9,6 +9,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, random_split, Dataset
 from torch.utils.data import Subset
 from torchvision import transforms
+from torchsummary import summary
 
 import model
 
@@ -21,6 +22,8 @@ params = list(conv_model.parameters())
 total_params = sum(
     param.numel() for param in conv_model.parameters()
 )
+
+summary(conv_model, (1, 13, 13))
 
 # Loss function
 loss_fn = nn.MSELoss() # Mean Squared Error: error is squared
@@ -49,7 +52,9 @@ class ABSectionDataset(Dataset):
         img_path = os.path.join(self.image_dir, self.data.iloc[idx, 0])
 
         # noinspection PyTypeChecker
-        image = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+        image = cv2.imread(img_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2Lab)
+        image = cv2.extractChannel(image, 0)
 
         label = self.data.iloc[idx, 1:3].values.astype(np.float32)
 
@@ -65,6 +70,8 @@ transform = transforms.Compose([
     # transforms.Normalize(mean=[0.5], std=[0.5])
 ])
 
+
+# noinspection DuplicatedCode
 csv_path = r"E:\Programmierung\Datein\Python\bell_repo\conv-network\data.csv"
 data = pd.read_csv(csv_path)
 
@@ -74,7 +81,7 @@ dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, transfo
 
 # print(dataset)
 
-subset_indices = list(range(8000))
+subset_indices = list(range(10000))
 subset = Subset(dataset, subset_indices)
 
 train_size = int(0.9 * len(subset))
@@ -86,18 +93,22 @@ print("length parameters: ", len(params))
 print("total parameters: ", total_params)
 print("output_size: ", params[0].size())
 
-batch_size = 32
+batch_size = 64
 num_workers = 0
 
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
-num_epochs = 50
+num_epochs = 100
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 conv_model.to(device)
 start_time = time()
 training_loss_ot = [] # list for training loss over time
 validation_loss_ot = [] # list for validation loss over time
+
+# track best model
+best_val_loss = float("inf")
+best_model_weights = None  # Store best state_dict()
 
 
 for epoch in range(num_epochs):
@@ -121,6 +132,8 @@ for epoch in range(num_epochs):
 
         running_loss += loss.item()
 
+    avg_train_loss = running_loss / len(train_loader)
+
     print(f"Epoch {epoch+1}/{num_epochs}")
     print(f"rescaled targets: {[round(val, 4) for val in rescaled_targets[0].tolist()]}")
     print(f"rescaled outputs: {[round(val, 4) for val in rescaled_outputs[0].tolist()]}")
@@ -141,12 +154,23 @@ for epoch in range(num_epochs):
             loss = loss_fn(rescaled_outputs_loss, rescaled_targets_loss)
             validation_loss_ot.append(loss.item())  # loss.item() returns the value of tensor as Python number
             val_loss += loss.item()
+
+    avg_val_loss = val_loss / len(val_loader)
+
     print(f"Validation Loss: {val_loss/len(val_loader):.4f}")
     print(f"Epoch time: {time() - epoch_time:.2f} seconds")
     print("\n")
 
+    if avg_val_loss < best_val_loss:
+        best_val_loss = avg_val_loss
+        best_model_weights = conv_model.state_dict().copy()
+
+if best_model_weights is not None:
+    conv_model.load_state_dict(best_model_weights)
+    print(f"Loaded best model weights with val loss: {best_val_loss:.4f}")
+
 elapsed_time = time() - start_time
 # noinspection PyUnboundLocalVariable
 print(f"Training time: {elapsed_time:.2f} seconds")
-model_path = r"saved-models/conv_model_leakyReLU_3.pth"
+model_path = r"saved-models/conv_model_leakyReLU_4.pth"
 torch.save(conv_model, model_path)

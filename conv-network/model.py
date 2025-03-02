@@ -1,7 +1,7 @@
 # Conv-Network mit PyTorch
 import torch as torch
 import torch.nn as nn
-# import torch.nn.functional as F
+import torch.nn.functional as F
 # import numpy as np
 # import pandas as pd
 # import cv2
@@ -153,7 +153,7 @@ class ConvModel(nn.Module):
         out = self.fc2(out)
         # out = F.relu(out)
         # out = F.sigmoid(out)
-        out = LeakyReLU(out)
+        # out = LeakyReLU(out)
 
         # print(torch._shape_as_tensor(out))
 
