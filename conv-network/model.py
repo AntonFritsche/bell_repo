@@ -22,8 +22,10 @@ class ConvModel(nn.Module):
                  layer_6_out_channels_param: int,
                  linear_layer_1_in_features_param: int,
                  linear_layer_1_out_features_param: int,
-                 linear_layer_2_features_param: int,
+                 linear_layer_2_in_features_param: int,
                  linear_layer_2_out_features_param: int,
+                 linear_layer_3_in_features_param: int,
+                 linear_layer_3_out_features_param: int
             ) -> None:
 
         super(ConvModel, self).__init__()
@@ -58,8 +60,13 @@ class ConvModel(nn.Module):
         self.linear_layer_1_out_features = linear_layer_1_out_features_param
 
         # linear layer 2 parameters
-        self.linear_layer_2_in_features = linear_layer_2_features_param
+        self.linear_layer_2_in_features = linear_layer_2_in_features_param
         self.linear_layer_2_out_features = linear_layer_2_out_features_param
+
+        # linear layer 3 parameters
+        self.linear_layer_3_in_features = linear_layer_3_features_param
+        self.linear_layer_3_out_features = linear_layer_3_featurers_param
+
 
         # convolution 1
         self.conv1 = nn.Conv2d(in_channels=self.layer_1_in_channels, out_channels=self.layer_1_out_channels, kernel_size=self.filter_size)
@@ -82,8 +89,11 @@ class ConvModel(nn.Module):
         # fully connected layer 1
         self.fc1 = nn.Linear(in_features=self.linear_layer_1_in_features, out_features=self.linear_layer_1_out_features)
         
-        # fully connected layer 2
+        # fully connectex layer 2
         self.fc2 = nn.Linear(in_features=self.linear_layer_2_in_features, out_features=self.linear_layer_2_out_features)
+
+        # fully connected layer 3
+        self.fc3 = nn.Linear(in_features=self.linear_layer_3_in_features, out_features=self.linear_layer_3_out_features)
 
 
     # noinspection PyPep8Naming
