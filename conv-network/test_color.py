@@ -46,6 +46,7 @@ def preprocess_image_rebuild():
 
 def show_image(input_image):
     image = cv2.imread(input_image)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
     plt.imshow(image)
     plt.axis('off')
     plt.title("Reconstructed Image")
@@ -157,12 +158,13 @@ def rebuild_image_pxl(row_ordner, target_height=487):
 
     cv2.imwrite("image.png", final_image)
 
-    final_image = cv2.imread("image.png")
+    final_image = cv2.cvtColor(cv2.imread("image.png"), cv2.COLOR_BGR2LAB)
     final_image = cv2.cvtColor(final_image, cv2.COLOR_BGR2LAB)
     final_image = cv2.rotate(final_image, cv2.ROTATE_90_CLOCKWISE)
     final_image = cv2.imwrite("image.png", final_image)
 
     print("Reconstructed image: image.png")
+    print(image.shape)
     show_image("image.png")
 
 # preprocess_image_rebuild()
