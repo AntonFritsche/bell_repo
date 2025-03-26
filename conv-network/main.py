@@ -27,11 +27,6 @@ summary(conv_model, (1, 13, 13))
 
 # Loss function
 loss_fn = nn.MSELoss() # Mean Squared Error: error is squared
-# loss_fn = nn.L1Loss() # Mean Absolute Error: error is absolute
-
-# Optimizers specified in the torch.optim package
-optimizer_adam = torch.optim.Adam(conv_model.parameters(), lr=0.001)
-optimizer_SGD = torch.optim.SGD(conv_model.parameters(), lr=0.001)
 
 def target_transform_func(target):
     target = torch.tensor(target, dtype=torch.float32)
@@ -52,9 +47,11 @@ class ABSectionDataset(Dataset):
         img_path = os.path.join(self.image_dir, self.data.iloc[idx, 0])
 
         # noinspection PyTypeChecker
-        image = cv2.imread(img_path)
+        image = cv2.imread(img_path).astype(np.float32)
+        image /= 255.0
         image = cv2.cvtColor(image, cv2.COLOR_BGR2Lab)
         image = cv2.extractChannel(image, 0)
+        image /= 100
 
         label = self.data.iloc[idx, 1:3].values.astype(np.float32)
 
@@ -81,7 +78,7 @@ dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, transfo
 
 # print(dataset)
 
-subset_indices = list(range(10000))
+subset_indices = list(range(12000))
 subset = Subset(dataset, subset_indices)
 
 train_size = int(0.9 * len(subset))
@@ -93,13 +90,22 @@ print("length parameters: ", len(params))
 print("total parameters: ", total_params)
 print("output_size: ", params[0].size())
 
-batch_size = 64
+batch_sizes = [4, 8, 16, 32] # different batch_sizes
+learning_rates = [0.1, 0.01, 0.001, 0.0001] # different learning rates
+num_epochs = [10, 25, 50, 100]
+
+
+batch_size = batch_sizes[3]
 num_workers = 0
+
+# Optimizers specified in the torch.optim package
+optimizer_adam = torch.optim.Adam(conv_model.parameters(), lr=learning_rates[2])
+optimizer_SGD = torch.optim.SGD(conv_model.parameters(), lr=0.001)
 
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
-num_epochs = 100
+num_epoch = num_epochs[3]
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 conv_model.to(device)
 start_time = time()
@@ -110,8 +116,7 @@ validation_loss_ot = [] # list for validation loss over time
 best_val_loss = float("inf")
 best_model_weights = None  # Store best state_dict()
 
-
-for epoch in range(num_epochs):
+for epoch in range(num_epoch):
     epoch_time = time()
     conv_model.train()
     running_loss = 0.0
@@ -134,7 +139,7 @@ for epoch in range(num_epochs):
 
     avg_train_loss = running_loss / len(train_loader)
 
-    print(f"Epoch {epoch+1}/{num_epochs}")
+    print(f"Epoch {epoch+1}/{num_epoch}")
     print(f"rescaled targets: {[round(val, 4) for val in rescaled_targets[0].tolist()]}")
     print(f"rescaled outputs: {[round(val, 4) for val in rescaled_outputs[0].tolist()]}")
     print(f"Training Loss: {running_loss/len(train_loader):.4f}")
@@ -172,5 +177,5 @@ if best_model_weights is not None:
 elapsed_time = time() - start_time
 # noinspection PyUnboundLocalVariable
 print(f"Training time: {elapsed_time:.2f} seconds")
-model_path = r"saved-models/conv_model_leakyReLU_4.pth"
+model_path = rf"saved-models/conv_model_leakyReLU_{0}.pth"
 torch.save(conv_model, model_path)

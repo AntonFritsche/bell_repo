@@ -144,7 +144,8 @@ def rebuild_image_pxl(row_ordner, target_height=487):
     for index, row_file in enumerate(row_files):
         row_path = os.path.join(row_ordner, row_file)
         row_image = cv2.imread(row_path)
-        row_image = cv2.cvtColor(row_image, cv2.COLOR_BGR2LAB)
+        row_image = cv2.cvtColor(row_image, cv2.COLOR_LAB2BGR) * 255.0
+
 
         if row_image is None:
             print(f"Fehler: Konnte {row_path} nicht lesen.")
@@ -158,7 +159,6 @@ def rebuild_image_pxl(row_ordner, target_height=487):
     cv2.imwrite("image.png", final_image)
 
     final_image = cv2.imread("image.png")
-    final_image = cv2.cvtColor(final_image, cv2.COLOR_BGR2LAB)
     final_image = cv2.rotate(final_image, cv2.ROTATE_90_CLOCKWISE)
     final_image = cv2.imwrite("image.png", final_image)
 

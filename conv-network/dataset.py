@@ -6,6 +6,7 @@ import csv
 import re
 import cv2
 import pandas as pd
+import numpy as np
 
 def extract_numbers(filename):
     numbers = re.findall(r'\d+', filename)
@@ -381,7 +382,8 @@ def create_csv_train(csv_path, train_dir):
         for image_name in image_files:
             image_path = os.path.join(train_dir, image_name)
             try:
-                image = cv2.imread(image_path)
+                image = cv2.imread(image_path).astype(np.float32)
+                image /= 255.0
                 if image is None:
                     raise ValueError(f"Bild an Pfad '{image_path}' konnte nicht gelesen werden.")
 
@@ -389,8 +391,8 @@ def create_csv_train(csv_path, train_dir):
                 A = cv2.extractChannel(lab_image, 1)
                 B = cv2.extractChannel(lab_image, 2)
 
-                central_a = A[6, 6] - 128
-                central_b = B[6, 6] - 128
+                central_a = A[6, 6]
+                central_b = B[6, 6]
 
                 label_a = int(central_a)
                 label_b = int(central_b)

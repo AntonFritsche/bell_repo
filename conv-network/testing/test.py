@@ -27,9 +27,9 @@ def show_image(input_image):
     plt.show()
 
 def test_cv2(row_path):
-    img = cv2.imread("cat.png")
+    img = cv2.imread("../cat.png")
     res_img = cv2.resize(img, (300, 500), interpolation=cv2.INTER_AREA)
-    cv2.imwrite("cat.png", res_img)
+    cv2.imwrite("../cat.png", res_img)
 
     row_image = cv2.imread(row_path)
 
@@ -51,7 +51,7 @@ def normalize_image():
         transforms.Normalize(mean=[0.5], std=[0.5])
     ])
 
-    image = Image.open("cat.png")
+    image = Image.open("../cat.png")
     # image = transform(image)
     # image = image.cpu().detach().numpy()
     # image = image.transpose(1, 2, 0)
@@ -80,5 +80,5 @@ def test_lab_cv2():
 
 # test_lab_cv2()
 
-conv_model = model.ConvModel(1, 4, 4, 8, 8, 16, 16, 32, 32, 64, 64, 128, 128, 32, 32, 2)
-summary(conv_model, (1, 13, 13))
+#conv_model = model.ConvModel(1, 4, 4, 8, 8, 16, 16, 32, 32, 64, 64, 128, 128, 32, 32, 2)
+#summary(conv_model, (1, 13, 13))
