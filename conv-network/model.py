@@ -22,8 +22,10 @@ class ConvModel(nn.Module):
                  layer_6_out_channels_param: int,
                  linear_layer_1_in_features_param: int,
                  linear_layer_1_out_features_param: int,
-                 linear_layer_2_features_param: int,
+                 linear_layer_2_in_features_param: int,
                  linear_layer_2_out_features_param: int,
+                 linear_layer_3_in_features_param: int,
+                 linear_layer_3_out_features_param: int
             ) -> None:
 
         super(ConvModel, self).__init__()
@@ -58,8 +60,13 @@ class ConvModel(nn.Module):
         self.linear_layer_1_out_features = linear_layer_1_out_features_param
 
         # linear layer 2 parameters
-        self.linear_layer_2_in_features = linear_layer_2_features_param
+        self.linear_layer_2_in_features = linear_layer_2_in_features_param
         self.linear_layer_2_out_features = linear_layer_2_out_features_param
+
+        # linear layer 3 parameters
+        self.linear_layer_3_in_features = linear_layer_3_in_features_param
+        self.linear_layer_3_out_features = linear_layer_3_out_features_param
+
 
         # convolution 1
         self.conv1 = nn.Conv2d(in_channels=self.layer_1_in_channels, out_channels=self.layer_1_out_channels, kernel_size=self.filter_size)
@@ -85,6 +92,9 @@ class ConvModel(nn.Module):
         # fully connected layer 2
         self.fc2 = nn.Linear(in_features=self.linear_layer_2_in_features, out_features=self.linear_layer_2_out_features)
 
+        # fully connected layer 3
+        self.fc3 = nn.Linear(in_features=self.linear_layer_3_in_features, out_features=self.linear_layer_3_out_features)
+
 
     # noinspection PyPep8Naming
     def forward(self, x):
@@ -93,69 +103,43 @@ class ConvModel(nn.Module):
 
         # convolution 1
         out = self.conv1(x)
-        # print("\nconvolution 1: ", torch._shape_as_tensor(out)) # shape: (4, 11, 11)
-        # sigmoid activation 1
-        # out = F.relu(out)
-        # out = F.sigmoid(out)
         out = LeakyReLU(out)
 
         # convolution 2
         out = self.conv2(out)
-        # print("convolution 2: ", torch._shape_as_tensor(out)) # shape: (6, 9, 9)
-        # sigmoid activation 2
-        # out = F.relu(out)
-        # out = F.sigmoid(out)
         out = LeakyReLU(out)
 
         # convolution 3
         out = self.conv3(out)
-        # print("convolution 3: ", torch._shape_as_tensor(out)) # shape: (8, 7, 7)
-        # sigmoid activation 3
-        # out = F.relu(out)
-        # out = F.sigmoid(out)
         out = LeakyReLU(out)
 
         # convolution 4
         out = self.conv4(out)
-        # print("convolution 4: ", torch._shape_as_tensor(out)) # shape: (12, 5, 5)
-        # sigmoid activation 4
-        # out = F.relu(out)
-        # out = F.sigmoid(out)
         out = LeakyReLU(out)
 
         # convolution 5
         out = self.conv5(out)
-        # print("convolution 5: ", torch._shape_as_tensor(out)) # shape: (24, 3, 3)
-        # sigmoid activation 5
-        # out = F.relu(out)
-        # out = F.sigmoid(out)
         out = LeakyReLU(out)
 
         # convolution 6
         out = self.conv6(out)
-        # print("convolution 6: ", torch._shape_as_tensor(out)) # shape: (32, 1 1)
-        # sigmoid activation 6
-        # out = F.relu(out)
-        # out = F.sigmoid(out)
         out = LeakyReLU(out)
 
-        # Flatten the output from conv layers
+        # Flatten
         out = torch.flatten(out, 1) # Flatten from [(batch_size,) 32, 1, 1] to [(batch_size,) 32, 1]
-        # out = torch.flatten(out, 0) # Flatten from [(batch_size,) 32, 1] to [(batch_size,) 32]
-        # print("after flatten layer: ", torch._shape_as_tensor(out))
 
-        # fully connected layers with sigmoid activations
+
+        # fc 1
         out = self.fc1(out)
-        # out = F.relu(out)
-        # out = F.sigmoid(out)
         out = LeakyReLU(out)
 
+        # fc 2
         out = self.fc2(out)
-        # out = F.relu(out)
-        # out = F.sigmoid(out)
-        # out = LeakyReLU(out)
+        out = LeakyReLU(out)
 
-        # print(torch._shape_as_tensor(out))
+        # fc 3
+        out = self.fc3(out)
+        out = LeakyReLU(out)
 
         return out # shape: tensor([2])
     
