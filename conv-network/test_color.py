@@ -26,7 +26,7 @@ from numpy import asarray
 
 # load model from path with input from model.py
 conv_model = ConvModel(1, 4, 4, 8, 8, 16, 16, 32, 32, 64, 64, 128, 128, 32, 32, 2)
-model_path = r"saved-models/conv_model_leakyReLU_0.pth"
+model_path = r"saved-models/conv_model_leakyReLU_4.pth"
 assert os.path.isfile(model_path), f"Model file not found at {model_path}"
 state_dict = torch.load(model_path, map_location='cpu', weights_only=False)
 conv_model.eval()
@@ -143,8 +143,7 @@ def rebuild_image_pxl(row_ordner, target_height=487):
 
     for index, row_file in enumerate(row_files):
         row_path = os.path.join(row_ordner, row_file)
-        row_image = cv2.imread(row_path).astype(np.float32)
-        row_image /= 255
+        row_image = cv2.imread(row_path)
         row_image = cv2.cvtColor(row_image, cv2.COLOR_BGR2LAB)
 
         if row_image is None:
@@ -155,10 +154,13 @@ def rebuild_image_pxl(row_ordner, target_height=487):
 
     final_image = cv2.vconcat(all_rows)
     final_image = np.fliplr(final_image)
-    final_image = cv2.rotate(final_image, cv2.ROTATE_90_CLOCKWISE)
-    final_image = cv2.cvtColor(final_image, cv2.COLOR_LAB2BGR)
-    final_image *= 255.0
+
     cv2.imwrite("image.png", final_image)
+
+    final_image = cv2.imread("image.png")
+    final_image = cv2.cvtColor(final_image, cv2.COLOR_BGR2LAB)
+    final_image = cv2.rotate(final_image, cv2.ROTATE_90_CLOCKWISE)
+    final_image = cv2.imwrite("image.png", final_image)
 
     print("Reconstructed image: image.png")
     show_image("image.png")
