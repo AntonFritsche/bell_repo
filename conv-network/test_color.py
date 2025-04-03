@@ -25,8 +25,8 @@ from numpy import asarray
 
 
 # load model from path with input from model.py
-conv_model = ConvModel(1, 4, 4, 8, 8, 16, 16, 32, 32, 64, 64, 128, 128, 32, 32, 2)
-model_path = r"saved-models/conv_model_leakyReLU_4.pth"
+conv_model = ConvModel(1, 4, 4, 8, 8, 16, 16, 32, 32, 64, 64, 128, 128, 32, 32, 32, 32, 2)
+model_path = r"saved-models/conv_model_leakyReLU_10.pth"
 assert os.path.isfile(model_path), f"Model file not found at {model_path}"
 state_dict = torch.load(model_path, map_location='cpu', weights_only=False)
 conv_model.eval()
@@ -72,8 +72,6 @@ def create_pxl_from_preds(input_image, prediction):
     b_channel = b_channel.astype(np.float32)
 
     image_pred = cv2.merge([l_channel, a_channel, b_channel])
-    # print(image_pred[:1])
-
     return image_pred
 
 # noinspection DuplicatedCode
@@ -88,8 +86,7 @@ def rebuild_image_pxl_row(
     for i in list_rows:
         idx = i
 
-        image_files = [f for f in os.listdir(temp_folder_images) if
-                       f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
+        image_files = [f for f in os.listdir(temp_folder_images) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))]
         image_files.sort(key=extract_numbers)
 
         start_idx = idx * num_sections_per_row
@@ -105,29 +102,14 @@ def rebuild_image_pxl_row(
             section_path = os.path.join(temp_folder_images, section_file)
 
             section_image = cv2.imread(section_path, cv2.IMREAD_GRAYSCALE)
-            if section_image is None:
-                print(f"Fehler: Bild {section_path} konnte nicht gelesen werden.")
-                break
-
             section_tensor = torch.from_numpy(section_image).float().unsqueeze(0).unsqueeze(0)
-
             section_pred = conv_model(section_tensor)
-            if section_pred is None:
-                print(f"Fehler: Modell liefert keine Ausgabe für {section_path}")
-                break
-
             section_reconstructed = create_pxl_from_preds(section_image, section_pred)
-            if section_reconstructed is None or section_reconstructed.size == 0:
-                print(f"Fehler: Rekonstruktion für {section_path} fehlgeschlagen.")
-                break
 
-            row_images.append(section_reconstructed)
-
+            row_images.append(cv2.cvtColor(section_reconstructed, cv2.COLOR_LAB2BGR)*255.0)
         row = np.hstack(row_images)
-
         row_path = os.path.join(temp_folder_rows, f"row_{idx}.png")
         cv2.imwrite(row_path, row)
-
         add_index += 1
         print(f"Row {idx} reconstructed and saved as {row_path}.")
 
@@ -144,27 +126,15 @@ def rebuild_image_pxl(row_ordner, target_height=487):
     for index, row_file in enumerate(row_files):
         row_path = os.path.join(row_ordner, row_file)
         row_image = cv2.imread(row_path)
-        row_image = cv2.cvtColor(row_image, cv2.COLOR_BGR2LAB)
-
-        if row_image is None:
-            print(f"Fehler: Konnte {row_path} nicht lesen.")
-            continue
-
+        #row_image = cv2.cvtColor(row_image, cv2.COLOR_BGR2LAB)
         all_rows.append(row_image)
 
     final_image = cv2.vconcat(all_rows)
     final_image = np.fliplr(final_image)
-
+    final_image = cv2.rotate(final_image, cv2.ROTATE_180)
     cv2.imwrite("image.png", final_image)
-
-    final_image = cv2.imread("image.png")
-    final_image = cv2.cvtColor(final_image, cv2.COLOR_BGR2LAB)
-    final_image = cv2.rotate(final_image, cv2.ROTATE_90_CLOCKWISE)
-    final_image = cv2.imwrite("image.png", final_image)
-
-    print("Reconstructed image: image.png")
     show_image("image.png")
 
 # preprocess_image_rebuild()
-# rebuild_image_pxl_row(0, 488)
-# rebuild_image_pxl(temp_folder_rows)
+rebuild_image_pxl_row(0, 488)
+rebuild_image_pxl(temp_folder_rows)

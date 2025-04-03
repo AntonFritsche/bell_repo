@@ -47,12 +47,8 @@ class ABSectionDataset(Dataset):
         img_path = os.path.join(self.image_dir, self.data.iloc[idx, 0])
 
         # noinspection PyTypeChecker
-        image = cv2.imread(img_path).astype(np.float32)
-        image /= 255.0
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2Lab)
-        image = cv2.extractChannel(image, 0)
-        image /= 100
-
+        image = cv2.cvtColor(cv2.imread(img_path).astype(np.float32)/255.0, cv2.COLOR_BGR2Lab)
+        image = cv2.extractChannel(image, 0)/100
         label = self.data.iloc[idx, 1:3].values.astype(np.float32)
 
         if self.transform:
@@ -64,7 +60,6 @@ class ABSectionDataset(Dataset):
 # Transformation
 transform = transforms.Compose([
     transforms.ToTensor(),
-    # transforms.Normalize(mean=[0.5], std=[0.5])
 ])
 
 
@@ -177,5 +172,5 @@ if best_model_weights is not None:
 elapsed_time = time() - start_time
 # noinspection PyUnboundLocalVariable
 print(f"Training time: {elapsed_time:.2f} seconds")
-model_path = rf"saved-models/conv_model_leakyReLU_{0}.pth"
+model_path = rf"saved-models/conv_model_leakyReLU_{10}.pth"
 torch.save(conv_model, model_path)
