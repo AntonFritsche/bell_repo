@@ -8,9 +8,6 @@ from tqdm import tqdm
 import sys
 import cv2
 
-
-
-
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -97,7 +94,7 @@ def main():
             reconstruction_path = os.path.join(result_directory, reconstruction_filename)
 
             reconstructed_image = reconstructed_image.cpu().numpy()
-            reconstructed_image = cv2.cvtColor(reconstructed_image, cv2.COLOR_LAB2BGR)
+            reconstructed_image = cv2.cvtColor(reconstructed_image, cv2.COLOR_LAB2BGR)*255.0
 
             cv2.imwrite(reconstruction_path, reconstructed_image)
 

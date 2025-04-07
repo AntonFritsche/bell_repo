@@ -2,6 +2,7 @@ import cv2
 from torch.utils.data import Dataset
 import os
 import torch
+import numpy as np
 
 class RuntimeABSectionDataset(Dataset):
     def __init__(self,
@@ -18,7 +19,7 @@ class RuntimeABSectionDataset(Dataset):
         assert(len(files) == 1)
         self.image_path = os.path.join(self.data_directory, files[0])
 
-        self.image = cv2.imread(self.image_path)
+        self.image = cv2.imread(self.image_path).astype(np.float32)/255.0
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2LAB)
         self.shape = self.image.shape[:2]
 
