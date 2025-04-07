@@ -11,3 +11,8 @@ runs/
 prediction_cat/!/conv-network/data.csv
 temp_folder_images/
 temp_folder_rows/
+
+.idea
+
+__pycache__
+data.zip
