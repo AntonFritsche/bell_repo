@@ -112,7 +112,7 @@ test_csv_path = os.path.join(conv_network_folder, 'test.csv')
 # create_csv_from_dataset(os.path.join(conv_network_folder, 'test'), test_csv_path)
 
 def resize_images(folder_path, size=(500, 500)):
-    images = [os.path.join(folder_path, img) for img in os.listdir(folder_path) 
+    images = [os.path.join(folder_path, img) for img in os.listdir(folder_path)
               if os.path.isfile(os.path.join(folder_path, img))]
 
     for image_path in images:
@@ -120,9 +120,9 @@ def resize_images(folder_path, size=(500, 500)):
             with Image.open(image_path) as img:
                 filename = os.path.basename(image_path)
                 cleared_filename = re.sub(r'[^a-zA-Z0-9]', '', filename.split('.')[0])  # Unerwünschte Zeichen referent
-                
+
                 resized_image = img.resize(size)
-                
+
                 save_path = os.path.join(folder_path, f"{cleared_filename}.jpg")
                 resized_image.save(save_path)
                 print(f"Bild resized und gespeichert: {save_path}")
@@ -137,8 +137,8 @@ test_folder = "./test"
 
 def rename_images(folder_path, folder_name):
     counter = 1
-    
-    images = [os.path.join(folder_path, img) for img in os.listdir(folder_path) 
+
+    images = [os.path.join(folder_path, img) for img in os.listdir(folder_path)
               if os.path.isfile(os.path.join(folder_path, img))]
 
     for image_path in images:
@@ -207,7 +207,7 @@ def resize_images_in_folders(base_folder):
             continue
 
         print(f"\n--- Bearbeite Bilder im Ordner: {folder} ---")
-        images = [os.path.join(folder_path, img) for img in os.listdir(folder_path) 
+        images = [os.path.join(folder_path, img) for img in os.listdir(folder_path)
                   if os.path.isfile(os.path.join(folder_path, img))]
 
         for image_path in images:
@@ -262,12 +262,12 @@ def preprocess_image(output_ordner, input_image, section_size=13, overlap=1):
     img_height, img_width, _ = image.shape
 
     section_count = 0
-    
+
     for y in range(img_height - section_size + 1):  # height
         for x in range(img_width - section_size + 1):  # width
             # cutting the section out of the image
             sektion = image[y:y + section_size, x:x + section_size]
-            
+
             # safe section
             cv2.imwrite(f"{output_ordner}/sektion_{x}_{y}.png", sektion)
 
@@ -289,10 +289,10 @@ def process_all_images(image_dir, csv_path, section_size=13, overlap=1):
         for image_name in images:
             if image_name.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
                 image_path = os.path.join(image_dir, image_name)
-                
+
                 try:
                     central_pixels = preprocess_image(image_dir, image_path, section_size, overlap)
-                    
+
                     for pixel in central_pixels:
                         csv_writer.writerow([image_name] + pixel)
                 except Exception as e:
@@ -308,21 +308,21 @@ csv_file_path_train = "data.csv"
 
 def add_section_id_to_csv(csv_file, output_csv_file):
     data = pd.read_csv(csv_file)
-    
+
     section_id = 0
-    
+
     section_ids = []
-    
+
     for filename in data['filename'].unique():
         image_data = data[data['filename'] == filename]
-        
+
         for _ in image_data.itertuples():
             section_ids.append(section_id)
             section_id += 1
         section_id = 0
-    
+
     data['section_id'] = section_ids
-    
+
     data.to_csv(output_csv_file, index=False)
     print(f"Section IDs wurden hinzugefügt. Neue CSV gespeichert als: {output_csv_file}")
 
@@ -349,7 +349,7 @@ def rename_png_files(directory):
     if not png_files:
         print("Keine PNG-Dateien gefunden.")
         return
-    
+
     png_files.sort()
 
     for index, file_name in enumerate(png_files, start=1):

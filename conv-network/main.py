@@ -1,6 +1,5 @@
 import os
 from time import time
-
 import cv2
 import numpy as np
 import pandas as pd
@@ -10,12 +9,10 @@ from torch.utils.data import DataLoader, random_split, Dataset
 from torch.utils.data import Subset
 from torchvision import transforms
 from torchsummary import summary
-
 import model
 
 #instantate the convolution model
 conv_model = model.ConvModel(1, 4, 4, 8, 8, 16, 16, 32, 32, 64, 64, 128, 128, 32, 32, 32, 32, 2)
-print(conv_model)
 
 # list of parameters
 params = list(conv_model.parameters())
@@ -62,23 +59,16 @@ transform = transforms.Compose([
     transforms.ToTensor(),
 ])
 
-
 # noinspection DuplicatedCode
 csv_path = r"E:\Programmierung\Datein\Python\bell_repo\conv-network\data.csv"
-data = pd.read_csv(csv_path)
-
 image_dir = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\train"
 
 dataset = ABSectionDataset(csv_file=csv_path, image_dir_param=image_dir, transform_func=transform, target_transform_param=target_transform_func)
 
-# print(dataset)
-
 subset_indices = list(range(12000))
 subset = Subset(dataset, subset_indices)
-
 train_size = int(0.9 * len(subset))
 val_size = len(subset) - train_size
-
 train_dataset, val_dataset = random_split(subset, [train_size, val_size])
 
 print("length parameters: ", len(params))
@@ -87,15 +77,14 @@ print("output_size: ", params[0].size())
 
 batch_sizes = [4, 8, 16, 32] # different batch_sizes
 learning_rates = [0.1, 0.01, 0.001, 0.0001] # different learning rates
-num_epochs = [10, 25, 50, 100]
-
+num_epochs = [10, 25, 50, 100] # different number of epochs
 
 batch_size = batch_sizes[3]
 num_workers = 0
 
 # Optimizers specified in the torch.optim package
 optimizer_adam = torch.optim.Adam(conv_model.parameters(), lr=learning_rates[2])
-optimizer_SGD = torch.optim.SGD(conv_model.parameters(), lr=0.001)
+optimizer_SGD = torch.optim.SGD(conv_model.parameters(), lr=learning_rates[2])
 
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)

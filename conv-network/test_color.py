@@ -23,17 +23,13 @@ import shutil
 import re
 from numpy import asarray
 
-# load model from path with input from model.py
-conv_model = ConvModel(1, 4, 4, 8, 8, 16, 16, 32, 32, 64, 64, 128, 128, 32, 32, 32, 32, 2)
+# load state dict
 model_path = r"saved-models/conv_model_leakyReLU_10.pth"
-assert os.path.isfile(model_path), f"Model file not found at {model_path}"
-state_dict = torch.load(model_path, map_location='cpu', weights_only=False)
-conv_model.load_state_dict(state_dict)
+conv_model = torch.load(model_path, map_location='cpu', weights_only=False)
 conv_model.eval()
 
 temp_folder_images = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\temp_folder_images"
 temp_folder_rows = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\temp_folder_rows"
-
 def preprocess_image_rebuild():
     # shutil.rmtree(temp_folder_images, ignore_errors=True)
     # shutil.rmtree(temp_folder_rows, ignore_errors=True)
@@ -45,7 +41,7 @@ def preprocess_image_rebuild():
         preprocess_image(temp_folder_images, r"E:\Programmierung\Datein\Python\bell_repo\conv-network\cat.png")
 
 def show_image(input_image):
-    image = cv2.imread(input_image)
+    image = cv2.cvtColor(cv2.imread(input_image), cv2.COLOR_BGR2RGB)
     plt.imshow(image)
     plt.axis('off')
     plt.title("Reconstructed Image")
@@ -100,13 +96,12 @@ def rebuild_image_pxl_row(
 
         for index, section_file in enumerate(row_sections):
             section_path = os.path.join(temp_folder_images, section_file)
-
             section_image = cv2.imread(section_path, cv2.IMREAD_GRAYSCALE)
             section_tensor = torch.from_numpy(section_image).float().unsqueeze(0).unsqueeze(0)
             section_pred = conv_model(section_tensor)
             section_reconstructed = create_pxl_from_preds(section_image, section_pred)
+            row_images.append(np.round(cv2.cvtColor(section_reconstructed, cv2.COLOR_LAB2BGR)*255.0, 0))
 
-            row_images.append(cv2.cvtColor(section_reconstructed, cv2.COLOR_LAB2BGR)*255.0)
         row = np.hstack(row_images)
         row_path = os.path.join(temp_folder_rows, f"row_{idx}.png")
         cv2.imwrite(row_path, row)
@@ -126,15 +121,18 @@ def rebuild_image_pxl(row_ordner, target_height=487):
     for index, row_file in enumerate(row_files):
         row_path = os.path.join(row_ordner, row_file)
         row_image = cv2.imread(row_path)
-        #row_image = cv2.cvtColor(row_image, cv2.COLOR_BGR2LAB)
         all_rows.append(row_image)
 
     final_image = cv2.vconcat(all_rows)
     final_image = np.fliplr(final_image)
-    final_image = cv2.rotate(final_image, cv2.ROTATE_180)
+    final_image = cv2.rotate(final_image, cv2.ROTATE_90_COUNTERCLOCKWISE)
     cv2.imwrite("image.png", final_image)
     show_image("image.png")
 
-# preprocess_image_rebuild()
-rebuild_image_pxl_row(0, 488)
-rebuild_image_pxl(temp_folder_rows)
+def main():
+    # preprocess_image_rebuild()
+    rebuild_image_pxl_row(0, 488)
+    rebuild_image_pxl(temp_folder_rows)
+
+if __name__ == "__main__":
+    main()
