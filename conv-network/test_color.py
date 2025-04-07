@@ -23,12 +23,12 @@ import shutil
 import re
 from numpy import asarray
 
-
 # load model from path with input from model.py
 conv_model = ConvModel(1, 4, 4, 8, 8, 16, 16, 32, 32, 64, 64, 128, 128, 32, 32, 32, 32, 2)
 model_path = r"saved-models/conv_model_leakyReLU_10.pth"
 assert os.path.isfile(model_path), f"Model file not found at {model_path}"
 state_dict = torch.load(model_path, map_location='cpu', weights_only=False)
+conv_model.load_state_dict(state_dict)
 conv_model.eval()
 
 temp_folder_images = r"F:\Projekte\bell_repo\conv_netzwerk_dataset\temp_folder_images"
