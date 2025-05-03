@@ -11,8 +11,9 @@ import cv2
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    epochs = 20
-    train_directory = "./data"
+    epochs = 10
+    train_directory = "./data/train"
+    val_directory = "./data/val"
     result_directory = "./result"
     if not os.path.exists(result_directory):
         os.makedirs(result_directory)
@@ -26,10 +27,9 @@ def main():
     optimizer = torch.optim.AdamW(conv_model.parameters(), lr=lr)
 
     train_dataset = RuntimeABSectionDataset(train_directory, section_size, False)
-    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=16)
+    train_loader = DataLoader(train_dataset, batch_size=1024, shuffle=True, num_workers=16)
 
-    # todo: validate on other dataset / image
-    val_dataset = RuntimeABSectionDataset(train_directory, section_size, True)
+    val_dataset = RuntimeABSectionDataset(val_directory, section_size, True)
     val_loader = DataLoader(val_dataset, batch_size=256, shuffle=True, num_workers=16)
 
     for epoch in range(1, epochs + 1):

@@ -89,6 +89,7 @@ def rebuild_image_pxl_row(
         start_idx += add_index
 
         end_idx = start_idx + num_sections_per_row
+
         row_sections = image_files[start_idx:end_idx]
         print(f"start idx: {start_idx}, end idx: {end_idx}")
 
