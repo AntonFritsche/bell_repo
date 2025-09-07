@@ -1,14 +1,15 @@
+import os
+import torch
+import sys
+import cv2
+import matplotlib.pyplot as plt
+
 from model import ConvModel
 from torch.nn import MSELoss
 from dataset import RuntimeABSectionDataset
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-import os
-import torch
-import sys
-import cv2
-import matplotlib.pyplot as plt
 
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -27,22 +28,25 @@ def main():
     batch_size_train = 128
     batch_size_val = 256
 
-    conv_model = ConvModel(1, 4, 4, 8, 8, 16, 16, 32, 32, 64, 64, 128, 128, 32, 32, 32, 32, 2)
+    conv_model = ConvModel()
     conv_model = conv_model.to(device)
 
     loss_fn = MSELoss()
     optimizer = torch.optim.AdamW(conv_model.parameters(), lr=lr)
 
-    train_dataset = RuntimeABSectionDataset(train_directory, section_size, False)
+    train_dataset = RuntimeABSectionDataset(train_directory, section_size, return_centers=False)
     train_loader = DataLoader(train_dataset, batch_size=batch_size_train, shuffle=True, num_workers=16)
 
-    val_dataset = RuntimeABSectionDataset(val_directory, section_size, True)
+    val_dataset = RuntimeABSectionDataset(val_directory, section_size, return_centers=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size_val, shuffle=True, num_workers=16)
+
+    print(len(train_dataset), len(val_dataset))
 
     for epoch in range(1, epochs + 1):
         loss_acc = 0.0
         samples_seen = 0
 
+        conv_model.train()
         training_progress = tqdm(
             enumerate(train_loader),
             total=len(train_loader),
@@ -50,8 +54,6 @@ def main():
             file=sys.stdout,
             desc=f'Epoch {epoch} / {epochs} - Training  '
         )
-
-        conv_model.train()
 
         for batch_idx, (data, label) in training_progress:
             data, label = data.to(device), label.to(device)
@@ -61,17 +63,6 @@ def main():
             loss = loss_fn(prediction, label)
 
             training_loss.append(loss.item())
-
-            if batch_idx == batch_size_train:
-                grad_map = data.grad[0].detach().abs().cpu()
-
-                grad_map_norm = (grad_map - grad_map.min()) / (grad_map.max() - grad_map.min())
-
-                plt.imshow(grad_map_norm, cmap='hot')
-                plt.title(f"Epoch {epoch} (last batch) Gradient Map")
-                plt.colorbar()
-                plt.imsave(os.path.join(result_directory, f"grad_map_{epoch}.png"), grad_map_norm)
-
 
             loss.backward()
             optimizer.step()
@@ -86,7 +77,6 @@ def main():
             )
 
         conv_model.eval()
-
         validation_progress = tqdm(
             enumerate(val_loader),
             total=len(val_loader),
@@ -101,7 +91,7 @@ def main():
             for batch_idx, (data, label, center_x, center_y) in validation_progress:
                 data, label = data.to(device), label.to(device)
 
-                prediction = conv_model(data)
+                prediction = conv_model(data)*255
                 loss = loss_fn(prediction, label)
 
                 validation_loss.append(loss.item())
@@ -126,15 +116,16 @@ def main():
 
             cv2.imwrite(reconstruction_path, reconstructed_image)
 
-    fig_train, ax = plt.subplots(1, 2, layout="constrained")
-    ax.plot(training_loss)
+    fig_train, ax = plt.subplots()
+    ax.plot(training_loss, [i for i in range(epochs)])
     fig_train.suptitle("Training Loss")
     ax.set_xlabel("Epoch")
     ax.set_ylabel("Loss")
     plt.savefig(os.path.join(result_directory, "training_loss.png"))
     plt.show()
 
-    fig_val, ax = plt.subplots(1, 2, layout="constrained")
+    fig_val, ax = plt.subplots()
+    ax.plot(training_loss, [i for i in range(epochs)])
     fig_train.suptitle("validation Loss")
     ax.set_xlabel("Epoch")
     ax.set_ylabel("Loss")
