@@ -21,9 +21,9 @@ class RuntimeABSectionDataset(Dataset):
 
         for fname in self.files:
             self.image_path = os.path.join(self.data_directory, fname)
-            image = cv2.imread(self.image_path).astype(np.float32) / 255.0
+            image = cv2.imread(self.image_path)
             image = cv2.resize(image, (500, 500))
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB).astype(np.float32) / 255.0
 
             self.images.append(image)
             self.image_shapes.append(image.shape[:2])

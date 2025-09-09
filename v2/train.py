@@ -23,13 +23,15 @@ def main():
     result_directory = "./result"
     if not os.path.exists(result_directory):
         os.makedirs(result_directory)
-    section_size = 13
+    section_size = 17
     lr = 1e-4
     batch_size_train = 128
     batch_size_val = 256
 
-    conv_model = ConvModel()
+    conv_model = ConvModel(section_size=section_size)
     conv_model = conv_model.to(device)
+
+    print("# Parameters: ", sum(p.numel() for p in conv_model.parameters() if p.requires_grad))
 
     loss_fn = MSELoss()
     optimizer = torch.optim.AdamW(conv_model.parameters(), lr=lr)
@@ -91,14 +93,14 @@ def main():
             for batch_idx, (data, label, center_x, center_y) in validation_progress:
                 data, label = data.to(device), label.to(device)
 
-                prediction = conv_model(data)*255
+                prediction = conv_model(data)
                 loss = loss_fn(prediction, label)
 
                 validation_loss.append(loss.item())
 
-                l = data[:, 0, section_size // 2, section_size // 2]
-                a = prediction[:, 0]
-                b = prediction[:, 1]
+                l = data[:, 0, section_size // 2, section_size // 2] * 255.0
+                a = prediction[:, 0] * 255.0
+                b = prediction[:, 1] * 255.0
 
                 reconstructed_image[center_x, center_y, 0] = l.type(torch.uint8)
                 reconstructed_image[center_x, center_y, 1] = a.type(torch.uint8)
@@ -112,7 +114,7 @@ def main():
             reconstruction_path = os.path.join(result_directory, reconstruction_filename)
 
             reconstructed_image = reconstructed_image.cpu().numpy()
-            reconstructed_image = cv2.cvtColor(reconstructed_image, cv2.COLOR_LAB2BGR)*255.0
+            reconstructed_image = cv2.cvtColor(reconstructed_image, cv2.COLOR_LAB2BGR)
 
             cv2.imwrite(reconstruction_path, reconstructed_image)
 
