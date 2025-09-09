@@ -14,8 +14,8 @@ from tqdm import tqdm
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    training_loss = []
-    validation_loss = []
+    training_losses = []
+    validation_losses = []
 
     epochs = 10
     train_directory = "./data/train"
@@ -23,7 +23,7 @@ def main():
     result_directory = "./result"
     if not os.path.exists(result_directory):
         os.makedirs(result_directory)
-    section_size = 17
+    section_size = 13
     lr = 1e-4
     batch_size_train = 128
     batch_size_val = 256
@@ -64,8 +64,6 @@ def main():
             prediction = conv_model(data)
             loss = loss_fn(prediction, label)
 
-            training_loss.append(loss.item())
-
             loss.backward()
             optimizer.step()
 
@@ -77,6 +75,11 @@ def main():
                     "Loss": loss_acc / samples_seen
                 }
             )
+
+        training_losses.append(loss_acc / samples_seen)
+
+        val_loss_acc = 0.0
+        val_samples_seen = 0
 
         conv_model.eval()
         validation_progress = tqdm(
@@ -96,7 +99,8 @@ def main():
                 prediction = conv_model(data)
                 loss = loss_fn(prediction, label)
 
-                validation_loss.append(loss.item())
+                val_loss_acc += loss.item() * data.size(0)
+                val_samples_seen += data.size(0)
 
                 l = data[:, 0, section_size // 2, section_size // 2] * 255.0
                 a = prediction[:, 0] * 255.0
@@ -105,6 +109,8 @@ def main():
                 reconstructed_image[center_x, center_y, 0] = l.type(torch.uint8)
                 reconstructed_image[center_x, center_y, 1] = a.type(torch.uint8)
                 reconstructed_image[center_x, center_y, 2] = b.type(torch.uint8)
+
+            validation_losses.append(val_loss_acc / val_samples_seen)
 
             print("L range: ", reconstructed_image[:, :, 0].min().item(), reconstructed_image[:, :, 0].max().item())
             print("A range: ", reconstructed_image[:, :, 1].min().item(), reconstructed_image[:, :, 1].max().item())
@@ -119,7 +125,7 @@ def main():
             cv2.imwrite(reconstruction_path, reconstructed_image)
 
     fig_train, ax = plt.subplots()
-    ax.plot(training_loss, [i for i in range(epochs)])
+    ax.plot([i for i in range(epochs)], training_losses)
     fig_train.suptitle("Training Loss")
     ax.set_xlabel("Epoch")
     ax.set_ylabel("Loss")
@@ -127,7 +133,7 @@ def main():
     plt.show()
 
     fig_val, ax = plt.subplots()
-    ax.plot(training_loss, [i for i in range(epochs)])
+    ax.plot([i for i in range(epochs)], validation_losses)
     fig_train.suptitle("validation Loss")
     ax.set_xlabel("Epoch")
     ax.set_ylabel("Loss")
