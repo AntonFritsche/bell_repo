@@ -1,7 +1,2 @@
-runs/
 .venv/
-.idea
-alt/
-__pycache__
-data.zip
-data/
+conv-network/
