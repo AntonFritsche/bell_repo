@@ -9,6 +9,7 @@ from torch.nn import MSELoss
 from dataset import RuntimeABSectionDataset
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from torchsummary import summary
 
 
 def main():
@@ -23,7 +24,7 @@ def main():
     result_directory = "./result"
     if not os.path.exists(result_directory):
         os.makedirs(result_directory)
-    section_size = 13
+    section_size = 11
     lr = 1e-4
     batch_size_train = 128
     batch_size_val = 256
