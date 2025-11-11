@@ -1,0 +1,4 @@
+sektion_size:
+5: train_loss (), val_loss ()
+11: train_loss (), val_loss ()
+15: train_loss (), val_loss ()

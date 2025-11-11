@@ -1,61 +1,44 @@
 import cv2
+from PIL.ImageOps import grayscale
 from torch.utils.data import Dataset
 import os
 import torch
 import numpy as np
+import random
 
-class RuntimeABSectionDataset(Dataset):
-    def __init__(self,
-                 data_directory: str,
-                 section_size: int,
-                 return_centers: bool = False,
-                 ):
-        super(RuntimeABSectionDataset, self).__init__()
-        self.data_directory = data_directory
+class Section_Dataset(Dataset):
+    def __init__(self, data_directory: str, section_size: int, patches_per_image=300):
+        self.image_paths = [os.path.join(data_directory, f) for f in os.listdir(data_directory)]
         self.section_size = section_size
-        self.files = os.listdir(self.data_directory)
-        self.return_centers = return_centers
-
-        self.images = []
-        self.image_shapes = []
-
-        for fname in self.files:
-            self.image_path = os.path.join(self.data_directory, fname)
-            image = cv2.imread(self.image_path)
-            image = cv2.resize(image, (500, 500))
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB).astype(np.float32) / 255.0
-
-            self.images.append(image)
-            self.image_shapes.append(image.shape[:2])
-
-        self.patch_positions = []
-        for img_idx, shape in enumerate(self.image_shapes):
-            rows = shape[0] - section_size + 1
-            cols = shape[1] - section_size + 1
-            for r in range(rows):
-                for c in range(cols):
-                    self.patch_positions.append((img_idx, r, c))
+        self.patches_per_image = patches_per_image
+        self.num_patches = len(self.image_paths) * patches_per_image
 
     def __getitem__(self, index):
-        img_idx, row_idx, col_idx = self.patch_positions[index]
-        image = self.images[img_idx]
+        img_idx = index // self.patches_per_image
+        image = cv2.imread(self.image_paths[img_idx])
+        image = cv2.resize(image, (500, 500))
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB).astype(np.float32)
+        image[:, :, 0] = image[:, :, 0] / 255.0
+        image[:, :, 1] = (image[:, :, 1] - 128.0) / 128.0
+        image[:, :, 2] = (image[:, :, 2] - 128.0) / 128.0
 
-        center_x = row_idx + self.section_size // 2
-        center_y = col_idx + self.section_size // 2
+        h, w, _ = image.shape
+        r = random.randint(0, h - self.section_size)
+        c = random.randint(0, w - self.section_size)
+
+        center_x = r + self.section_size // 2
+        center_y = c + self.section_size // 2
 
         grayscale = cv2.extractChannel(image, coi=0)
-        data = grayscale[row_idx:(row_idx + self.section_size), col_idx:(col_idx + self.section_size)]
+        data = grayscale[r:r+self.section_size, c:c+self.section_size]
 
-        a = cv2.extractChannel(image, 1)[center_x, center_y]
-        b = cv2.extractChannel(image, 2)[center_x, center_y]
+        a = cv2.extractChannel(image, coi=1)[center_x, center_y]
+        b = cv2.extractChannel(image, coi=2)[center_x, center_y]
 
         data = torch.from_numpy(data).float().unsqueeze(0)
         label = torch.tensor([a, b]).float()
 
-        if self.return_centers:
-            return data, label, center_x, center_y
-        else:
-            return data, label
+        return data, label
 
     def __len__(self):
-        return len(self.patch_positions)
+        return self.num_patches
