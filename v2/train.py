@@ -128,7 +128,7 @@ def main(section_size: int):
             validation_losses.append(val_loss_acc / val_samples_seen)
         print(f"Epoch {epoch} / {epochs} - Validation Loss: {round(val_loss_acc / val_samples_seen, 5)}")
 
-    torch.save(conv_model, "conv_model_15.pth")
+    torch.save(conv_model, f"result/model_sectionsize_{section_size}/conv_model_15.pth")
 
     fig_train, ax = plt.subplots()
     ax.plot([i for i in range(epochs)], training_losses)
