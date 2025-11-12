@@ -13,11 +13,12 @@ from torchsummary import summary
 
 def main(section_size: int):
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    torch.set_flush_denormal(True)
 
     training_losses = []
     validation_losses = []
 
-    epochs = 15
+    epochs = 8
     # section_size = 13
     lr = 1e-6
     batch_size_train = 128
@@ -59,9 +60,9 @@ def main(section_size: int):
     optimizer = torch.optim.AdamW(conv_model.parameters(), lr=lr)
 
     train_dataset = Section_Dataset(train_directory, section_size)
-    train_loader = DataLoader(train_dataset, batch_size=batch_size_train, shuffle=True, num_workers=8)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size_train, shuffle=True, num_workers=16)
     val_dataset = Section_Dataset(val_directory, section_size)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size_val, shuffle=True, num_workers=8)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size_val, shuffle=True, num_workers=16)
 
     print("# len train_loader: ", len(train_loader))
     print("# len val_loader: ", len(val_loader))

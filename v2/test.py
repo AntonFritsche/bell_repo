@@ -1,18 +1,23 @@
 import os.path
-
 import torch
 import numpy as np
 import cv2
+
 from tqdm import trange
+from skimage import io, color
+from skimage.transform import resize
+
 
 def break_up_image(image_name: str,section_size: int):
-    image = cv2.imread(os.path.join("test", image_name))
-    image = cv2.resize(image, (500, 500))
+    image = io.imread(os.path.join("test", image_name))
+    if image.shape[-1] == 4:
+        image = image[:, :, :3]
+    image = resize(image, (500, 500), anti_aliasing=False)
     original_image = image.copy()
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB).astype(np.float32)
-    image[:, :, 0] = image[:, :, 0] / 255.0
-    image[:, :, 1] = (image[:, :, 1] - 128.0) / 128.0
-    image[:, :, 2] = (image[:, :, 2] - 128.0) / 128.0
+    image = color.rgb2lab(image).astype(np.float32)
+    image[:, :, 0] = image[:, :, 0] / 100.0
+    image[:, :, 1] = image[:, :, 1] / 128.0
+    image[:, :, 2] = image[:, :, 2] / 128.0
 
     print(f"# L: max {np.max(image[:, :, 0])} min {np.min(image[:, :, 0])}")
     print(f"# A: max {np.max(image[:, :, 1])} min {np.min(image[:, :, 1])}")
@@ -38,9 +43,9 @@ def break_up_image(image_name: str,section_size: int):
             section_tensor = torch.from_numpy(section).float().unsqueeze(0).unsqueeze(0)
             pred_section = model(section_tensor)
 
-            L = cv2.extractChannel(section, coi=0)[center_x, center_y] * 255.0
-            A = (pred_section[:, 0].detach().numpy() * 128.0) + 128.0
-            B = (pred_section[:, 1].detach().numpy() * 128.0) + 128.0
+            L = cv2.extractChannel(section, coi=0)[center_x, center_y] * 100.0
+            B = (pred_section[:, 1].detach().numpy() * 128.0) * 128.0
+            A = (pred_section[:, 0].detach().numpy() * 128.0) * 128.0
 
             pred_image[center_i, center_j, 0] = np.uint8(L) # L channel
             pred_image[center_i, center_j, 1] = np.uint8(A) # A channel
@@ -51,11 +56,11 @@ def break_up_image(image_name: str,section_size: int):
     print(f"# A: max {np.max(pred_image[:, :, 1])} min {np.min(pred_image[:, :, 1])}")
     print(f"# B: max {np.max(pred_image[:, :, 2])} min {np.min(pred_image[:, :, 2])}")
 
-    bgr_image = cv2.cvtColor(pred_image, cv2.COLOR_LAB2BGR)
-    cv2.imwrite(f"test/pred_{image_name}", bgr_image)
-    cv2.imwrite(f"test/{image_name}", original_image)
+    rgb_image = color.lab2rgb(pred_image)
+    io.imsave(f"test/pred_{image_name}", rgb_image)
+    io.imsave(f"test/{image_name}", original_image)
 
 if __name__ == "__main__":
-    break_up_image("cat.png", 15)
-    break_up_image("bike.png", 15)
+    # break_up_image("cat.png", 15)
+    # break_up_image("bike.png", 15)
     break_up_image("landscape.png", 15)
