@@ -1,7 +1,6 @@
-import os
+import os, random
 import torch
 import numpy as np
-import random
 
 from torch.utils.data import Dataset
 from skimage import io, color
@@ -9,7 +8,7 @@ from skimage.transform import resize
 
 
 class Section_Dataset(Dataset):
-    def __init__(self, data_directory: str, section_size: int, patches_per_image=300):
+    def __init__(self, data_directory: str, section_size: int, patches_per_image=200):
         self.image_paths = [os.path.join(data_directory, f) for f in os.listdir(data_directory)]
         self.section_size = section_size
         self.patches_per_image = patches_per_image
@@ -20,7 +19,7 @@ class Section_Dataset(Dataset):
         image = io.imread(self.image_paths[img_idx])
         if image.shape[-1] == 4:
             image = image[:, :, :3]
-        image = resize(image, (500, 500), anti_aliasing=True)
+        # image = resize(image, (500, 500), anti_aliasing=True)
         image = color.rgb2lab(image).astype(np.float32)
         image[:, :, 0] = image[:, :, 0] / 100.0
         image[:, :, 1] = image[:, :, 1] / 128.0

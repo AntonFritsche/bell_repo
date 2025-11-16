@@ -3,13 +3,33 @@ import torch
 import sys
 import matplotlib.pyplot as plt
 
-from model import ConvModel, ConvModel_v2
+from model import ConvModel
 from torch.nn import MSELoss
 from dataset import Section_Dataset
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from torchsummary import summary
 
+
+def test_section_sizes():
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    # exponentielle Abhängigkeit der section_size und der Parameter
+    section_sizes = [7, 9, 11, 13, 15, 17, 19, 21, 23, 25]
+    parameters = []
+    for size in section_sizes:
+        conv_model = ConvModel(section_size=size)
+        conv_model = conv_model.to(device)
+
+        print("# Parameters: ", sum(p.numel() for p in conv_model.parameters() if p.requires_grad))
+        parameters.append(sum(p.numel() for p in conv_model.parameters() if p.requires_grad))
+        summary(conv_model, (1, size, size))
+    fig, ax = plt.subplots()
+    plt.xticks(section_sizes)
+    ax = fig.gca()
+    ax.plot(section_sizes, parameters)
+    ax.set_xlabel("Sectionsgröße")
+    ax.set_ylabel("Parameter")
+    plt.show()
 
 def main(section_size: int):
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -18,8 +38,7 @@ def main(section_size: int):
     training_losses = []
     validation_losses = []
 
-    epochs = 8
-    # section_size = 13
+    epochs = 5
     lr = 1e-6
     batch_size_train = 128
     batch_size_val = 256
@@ -29,30 +48,10 @@ def main(section_size: int):
     if not os.path.exists(result_directory):
         os.makedirs(result_directory)
 
-    # exponentielle Abhängigkeit der section_size und der Parameter
-    # section_sizes = [7, 9, 11, 13, 15, 17, 19, 21, 23, 25]
-    # parameters = []
-    # for size in section_sizes:
-    #     conv_model = ConvModel(section_size=size)
-    #     conv_model = conv_model.to(device)
-    #
-    #     print("# Parameters: ", sum(p.numel() for p in conv_model.parameters() if p.requires_grad))
-    #     parameters.append(sum(p.numel() for p in conv_model.parameters() if p.requires_grad))
-    #     summary(conv_model, (1, size, size))
-    # fig, ax = plt.subplots()
-    # plt.xticks(section_sizes)
-    # ax = fig.gca()
-    # ax.plot(section_sizes, parameters)
-    # ax.set_xlabel("Sectionsgröße")
-    # ax.set_ylabel("Parameter")
-    # plt.show()
-
     # model
     conv_model = ConvModel(section_size=section_size)
     conv_model = conv_model.to(device)
-
-    # conv_model = ConvModel_v2(section_size=section_size)
-    # conv_model = conv_model.to(device)
+    # test_section_sizes()
 
     summary(conv_model, (1, section_size, section_size))
 
