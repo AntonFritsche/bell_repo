@@ -21,8 +21,8 @@ def patch_data(dir: str, train_data: bool, sections_size: int, patches_per_image
 
         # convert and normalize
         lab = color.rgb2lab(img_as_float(img))
-        lab[..., 0] /= 100
-        lab[..., 1:] /= 128
+        # lab[..., 0] /= 100
+        # lab[..., 1:] /= 128
 
         h, w, _ = lab.shape
 

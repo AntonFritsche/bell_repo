@@ -38,7 +38,7 @@ def main(section_size: int):
     training_losses = []
     validation_losses = []
 
-    epochs = 10
+    epochs = 15
     lr = 1e-2
     batch_size_train = 128
     batch_size_val = 256
@@ -152,5 +152,5 @@ def main(section_size: int):
 if __name__ == '__main__':
     # unterschiedliche section_sizes
     main(5)
-    # main(11)
-    # main(15)
+    main(11)
+    main(15)
