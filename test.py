@@ -38,13 +38,16 @@ def break_up_image(image_name:str, section_size:int):
             section_tensor = torch.from_numpy(section).float().unsqueeze(0).unsqueeze(0)
             pred_section = model(section_tensor)
 
-            L = np.mean(section)
+            center_x = i + section_size // 2
+            center_y = j + section_size // 2
+
+            L = grayscale[center_x, center_y]
             A = float(pred_section[0, 0].detach().cpu().numpy())
             B = float(pred_section[0, 1].detach().cpu().numpy())
 
-            pred_image[i, j, 0] = L # L channel
-            pred_image[i, j, 1] = A # A channel
-            pred_image[i, j, 2] = B # B channel
+            pred_image[center_x, center_y, 0] = L # L channel
+            pred_image[center_x, center_y, 1] = A # A channel
+            pred_image[center_x, center_y, 2] = B # B channel
 
     print(f"# shape {pred_image.shape}")
     print(f"# L: max {np.max(pred_image[:, :, 0])} min {np.min(pred_image[:, :, 0])}")
@@ -111,7 +114,7 @@ def test_integrity(image_name:str, section_size:int):
     print(f"# B: max {np.max(pred_image[:, :, 2])} min {np.min(pred_image[:, :, 2])}")
 
 if __name__ == "__main__":
-    break_up_image("cat.png", 5)
-    break_up_image("bike.png", 5)
-    break_up_image("landscape.png", 5)
+    break_up_image("cat.png", 15)
+    # break_up_image("bike.png", 5)
+    # break_up_image("landscape.png", 5)
     # test_integrity("landscape.png", 15)
