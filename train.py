@@ -31,20 +31,23 @@ def test_section_sizes():
     ax.set_ylabel("Parameter")
     plt.show()
 
-def main(section_size: int):
+def main(
+        section_size: int,
+        data: str
+    ):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     torch.set_flush_denormal(True)
 
     training_losses = []
     validation_losses = []
 
-    epochs = 15
-    lr = 1e-2
-    batch_size_train = 128
+    epochs = 10
+    lr = 1e-3
+    batch_size_train = 256
     batch_size_val = 256
-    train_directory = f"./data/train_patches_{section_size}"
-    val_directory = f"./data/val_patches_{section_size}"
-    result_directory = "./result/" + "model_sectionsize_" + str(section_size)
+    train_directory = os.path.join(data, f"train_patches_{section_size}")
+    val_directory = os.path.join(data, f"val_patches_{section_size}")
+    result_directory = f"./result/model_sectionsize_{section_size}"
     if not os.path.exists(result_directory):
         os.makedirs(result_directory)
 
@@ -151,6 +154,16 @@ def main(section_size: int):
 
 if __name__ == '__main__':
     # unterschiedliche section_sizes
-    main(5)
-    main(11)
-    main(15)
+    # minimal section_size = 9
+    main(
+        section_size=9,
+        data=f"D:/projekte/bell_repo/data/"
+    )
+    main(
+        section_size=13,
+        data=f"D:/projekte/bell_repo/data/"
+    )
+    main(
+        section_size=17,
+        data=f"D:/projekte/bell_repo/data/"
+    )

@@ -3,19 +3,18 @@ import torch
 import numpy as np
 
 from tqdm import trange
-from skimage.util import img_as_float
-from skimage import io, color
-from skimage.transform import resize
+import cv2 as cv
 from model import ConvModel
 
 
 def break_up_image(image_name:str, section_size:int):
-    image = io.imread(os.path.join("test", image_name))
+    image = cv.imread(os.path.join("test", image_name))
     if image.shape[-1] == 4:
         image = image[:, :, :3]
-    image = resize(image, (500, 500), anti_aliasing=False)
+    # image = cv.resize(image, (500, 500))
     original_image = image.copy()
-    image = color.rgb2lab(img_as_float(image))
+    image = cv.cvtColor(image, cv.COLOR_BGR2LAB)
+    image /= 255
 
     print(f"# L: max {np.max(image[:, :, 0])} min {np.min(image[:, :, 0])}")
     print(f"# A: max {np.max(image[:, :, 1])} min {np.min(image[:, :, 1])}")
@@ -54,26 +53,25 @@ def break_up_image(image_name:str, section_size:int):
     print(f"# A: max {np.max(pred_image[:, :, 1])} min {np.min(pred_image[:, :, 1])}")
     print(f"# B: max {np.max(pred_image[:, :, 2])} min {np.min(pred_image[:, :, 2])}\n")
 
-    rgb_image = color.lab2rgb(pred_image)
-    rgb_image_uint8 = (rgb_image * 255).astype(np.uint8)
+    pred_image_uint8 = (pred_image * 255).astype(np.uint8)
+    rgb_image = cv.cvtColor(pred_image_uint8, cv.COLOR_LAB2RGB)
 
-    print(f"# R: max {np.max(rgb_image_uint8[:, :, 0])} min {np.min(rgb_image_uint8[:, :, 0])}")
-    print(f"# G: max {np.max(rgb_image_uint8[:, :, 1])} min {np.min(rgb_image_uint8[:, :, 1])}")
-    print(f"# B: max {np.max(rgb_image_uint8[:, :, 2])} min {np.min(rgb_image_uint8[:, :, 2])}")
+    print(f"# R: max {np.max(rgb_image[:, :, 0])} min {np.min(rgb_image[:, :, 0])}")
+    print(f"# G: max {np.max(rgb_image[:, :, 1])} min {np.min(rgb_image[:, :, 1])}")
+    print(f"# B: max {np.max(rgb_image[:, :, 2])} min {np.min(rgb_image[:, :, 2])}")
 
-    io.imsave(f"test/pred_{image_name}", rgb_image_uint8)
-    original_uint8 = (original_image * 255).astype(np.uint8)
-    io.imsave(f"test/{image_name}", original_uint8)
+    cv.imwrite(f"test/pred_{image_name}", rgb_image)
     
 def test_integrity(image_name:str, section_size:int):
-    image = io.imread(os.path.join("test", image_name))
+    image = cv.imread(os.path.join("test", image_name))
     if image.shape[-1] == 4:
         image = image[:, :, :3]
     print(f"# R: max {np.max(image[:, :, 0])} min {np.min(image[:, :, 0])}")
     print(f"# G: max {np.max(image[:, :, 1])} min {np.min(image[:, :, 1])}")
     print(f"# B: max {np.max(image[:, :, 2])} min {np.min(image[:, :, 2])}\n")
 
-    image = color.rgb2lab(img_as_float(image))
+    image = cv.cvtColor(image, cv.COLOR_BGR2LAB)
+    image /= 255
 
     print(f"# L: max {np.max(image[:, :, 0])} min {np.min(image[:, :, 0])}")
     print(f"# A: max {np.max(image[:, :, 1])} min {np.min(image[:, :, 1])}")
@@ -85,7 +83,6 @@ def test_integrity(image_name:str, section_size:int):
     print("# image A channel:", image[:, :, 1], image[:, :, 1].shape)
     print("# image B channel:", image[:, :, 2], image[:, :, 2].shape)
     image = image[:, :, 0]
-    image /= 100
     image = torch.from_numpy(image).float().unsqueeze(0).unsqueeze(0)
 
     model = ConvModel(section_size=section_size)
@@ -95,23 +92,24 @@ def test_integrity(image_name:str, section_size:int):
     )
     model.eval()
     pred = model(image)
-    print("# model prediction A: ", pred[:, 0].item() * 128)
-    print("# model prediction B: ", pred[:, 1].item() * 128)
+    print("# model prediction A: ", pred[:, 0].item() * 255)
+    print("# model prediction B: ", pred[:, 1].item() * 255)
 
     pred_image = np.zeros((section_size, section_size, 3), dtype=np.float32)
-    L = image[0, 0].numpy() * 100
-    A = pred[:, 0].item() * 128
-    B = pred[:, 1].item() * 128
+    L = image[section_size//2, section_size//2].numpy()
+    A = pred[:, 0].item()
+    B = pred[:, 1].item()
 
     pred_image[:, :, 0] = L
     pred_image[:, :, 1] = A
     pred_image[:, :, 2] = B
 
-    pred_image = color.lab2rgb(pred_image.astype(np.float32))
+    pred_image = cv.cvtColor(pred_image, cv.COLOR_LAB2RGB)
+    pred_image_uint8 = (pred_image * 255).astype(np.uint8)
 
-    print(f"\n# R: max {np.max(pred_image[:, :, 0])} min {np.min(pred_image[:, :, 0])}")
-    print(f"# G: max {np.max(pred_image[:, :, 1])} min {np.min(pred_image[:, :, 1])}")
-    print(f"# B: max {np.max(pred_image[:, :, 2])} min {np.min(pred_image[:, :, 2])}")
+    print(f"\n# R: max {np.max(pred_image_uint8[:, :, 0])} min {np.min(pred_image_uint8[:, :, 0])}")
+    print(f"# G: max {np.max(pred_image_uint8[:, :, 1])} min {np.min(pred_image_uint8[:, :, 1])}")
+    print(f"# B: max {np.max(pred_image_uint8[:, :, 2])} min {np.min(pred_image_uint8[:, :, 2])}")
 
 if __name__ == "__main__":
     break_up_image("cat.png", 15)

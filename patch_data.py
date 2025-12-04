@@ -1,10 +1,18 @@
 import os
 import numpy as np
 
-from skimage.util import img_as_float
-from skimage import io, color
+import cv2 as cv
 from tqdm import trange
 
+
+def convert_to_8bit(dir: str):
+    files = os.listdir(dir)
+
+    for img_name in trange(len(files)):
+        img_name = os.listdir(dir)[img_name]
+        image = cv.imread(os.path.join(dir, img_name))
+        image = image[..., :3]
+        print(image.dtype)
 
 def patch_data(dir: str, train_data: bool, sections_size: int, patches_per_image: int):
     if train_data:
@@ -15,16 +23,22 @@ def patch_data(dir: str, train_data: bool, sections_size: int, patches_per_image
 
     for img_name in trange(len(os.listdir(dir))):
         img_name = os.listdir(dir)[img_name]
-        img = io.imread(os.path.join(dir, img_name))
-        if img.shape[-1] == 4:
-            img = img[..., :3]
+        img = cv.imread(os.path.join(dir, img_name))
+        lab = cv.cvtColor(img, cv.COLOR_BGR2LAB)
+        if lab.shape[-1] == 4:
+            lab = img[..., :3]
 
-        # convert and normalize
-        lab = color.rgb2lab(img_as_float(img))
-        # lab[..., 0] /= 100
-        # lab[..., 1:] /= 128
+        # print(f"L: {np.max(lab[:, :, 0])} min {np.min(lab[:, :, 0])}; A: {np.max(lab[:, :, 1])} min {np.min(lab[:, :, 1])}; B: {np.max(lab[:, :, 2])} min {np.min(lab[:, :, 2])}")
 
-        h, w, _ = lab.shape
+        # Separate channels
+        L = lab[:, :, 0] / 255
+        a = lab[:, :, 1] / 255
+        b = lab[:, :, 2] / 255
+
+        # print(f"L: {np.max(L)} min {np.min(L)}; A: {np.max(a)} min {np.min(a)}; B: {np.max(b)} min {np.min(b)}")
+
+        scaled_image = np.stack([L, a, b], axis=-1)
+        h, w, _ = scaled_image.shape
 
         for i in range(patches_per_image):
             r = np.random.randint(0, h - sections_size)
@@ -33,9 +47,9 @@ def patch_data(dir: str, train_data: bool, sections_size: int, patches_per_image
             center_x = r + sections_size // 2
             center_y = c + sections_size // 2
 
-            patch = lab[r:r+sections_size, c:c+sections_size, 0]
-            a = lab[center_x, center_y, 1]
-            b = lab[center_x, center_y, 2]
+            patch = scaled_image[r:r+sections_size, c:c+sections_size, 0]
+            a = scaled_image[center_x, center_y, 1]
+            b = scaled_image[center_x, center_y, 2]
 
             np.save(os.path.join(dst, f"{img_name}_{i}.npy"), {
                 "patch": patch,
@@ -44,13 +58,15 @@ def patch_data(dir: str, train_data: bool, sections_size: int, patches_per_image
 
 if __name__ == "__main__":
     # sections_size 15
-    patch_data("./data/train/", train_data=True, sections_size=5, patches_per_image=500)
-    patch_data("./data/val/", train_data=False, sections_size=5, patches_per_image=500)
+    patch_data("./data/train/", train_data=True, sections_size=5, patches_per_image=600)
+    patch_data("./data/val/", train_data=False, sections_size=5, patches_per_image=600)
 
     # sections_size 11
-    patch_data("./data/train/", train_data=True, sections_size=11, patches_per_image=500)
-    patch_data("./data/val/", train_data=False, sections_size=11, patches_per_image=500)
+    patch_data("./data/train/", train_data=True, sections_size=11, patches_per_image=600)
+    patch_data("./data/val/", train_data=False, sections_size=11, patches_per_image=600)
 
     # sections_size 5
-    patch_data("./data/train/", train_data=True, sections_size=15, patches_per_image=500)
-    patch_data("./data/val/", train_data=False, sections_size=15, patches_per_image=500)
+    patch_data("./data/train/", train_data=True, sections_size=15, patches_per_image=600)
+    patch_data("./data/val/", train_data=False, sections_size=15, patches_per_image=600)
+
+    # convert_to_8bit("./data/train/")
