@@ -7,9 +7,8 @@ from tqdm import trange
 from model import ConvModel_v1, ConvModel_v2
 import matplotlib.pyplot as plt
 
-
+# Erstelle eine Vorhersage für ein Bild mit einer bestimmten Modelversion
 def predict_image(
-        dir:str,
         image:str,
         section_size:int,
         model_version:str
@@ -50,6 +49,7 @@ def predict_image(
     pred_image_uint8 = cv.cvtColor(pred_image_uint8, cv.COLOR_LAB2RGB)
     return pred_image_uint8
 
+# Teste die Integrität der Wertebereiche von LAB und RGB eines Bildes mit einer bestimmten Sektionsgröße
 def test_integrity(
         image_name:str,
         section_size:int
@@ -92,6 +92,7 @@ def test_integrity(
     # print(f"# G: max {np.max(pred_image_uint8[:, :, 1])} min {np.min(pred_image_uint8[:, :, 1])}")
     # print(f"# B: max {np.max(pred_image_uint8[:, :, 2])} min {np.min(pred_image_uint8[:, :, 2])}")
 
+# Erstelle ein Grid aus den vorhergesagten Bildern (3)
 def image_grid(
         images:list[np.ndarray],
         model:str
@@ -112,19 +113,50 @@ def image_grid(
     plt.tight_layout()
     plt.savefig(os.path.join("./result/image_grid/", f"image_grid_{model}.png"))
 
+# Erstelle ein Histogramm aus den vorhergesagten Bildern (3)
+def histogram(
+        images:list[np.ndarray],
+        model:str
+    ):
+    _, axes = plt.subplots(nrows=3, ncols=2, sharey=True)
+
+    ax1, ax2 = axes[0]
+    ax3, ax4 = axes[1]
+    ax5, ax6 = axes[2]
+
+    ax1.hist(images[0].ravel(), bins=256)
+    ax2.hist(images[1].ravel(), bins=256)
+    ax3.hist(images[2].ravel(), bins=256)
+    ax4.hist(images[3].ravel(), bins=256)
+    ax5.hist(images[4].ravel(), bins=256)
+    ax6.hist(images[5].ravel(), bins=256)
+
+    ax1.set_title("Histogramm Original")
+    ax2.set_title("Histogramm Vorhersage")
+    ax3.set_title("Histogramm Original")
+    ax4.set_title("Histogramm Vorhersage")
+    ax5.set_title("Histogramm Original")
+    ax6.set_title("Histogramm Vorhersage")
+
+    plt.tight_layout()
+    plt.savefig(os.path.join("./result/histogram/", f"histogram_{model}.png"))
+
 if __name__ == "__main__":
     img_1 = cv.imread("./test/bike.jpg")
     img_2 = cv.imread("./test/cat.jpg")
     img_3 = cv.imread("./test/landscape.jpg")
 
-    img_1_v1_pred = predict_image("./test/", "bike.jpg", 13, "v1")
-    img_1_v2_pred = predict_image("./test/", "bike.jpg", 13, "v2")
+    img_1_v1_pred = predict_image("bike.jpg", 13, "v1")
+    img_1_v2_pred = predict_image("bike.jpg", 13, "v2")
 
-    img_2_v1_pred = predict_image("./test/", "cat.jpg", 13, "v1")
-    img_2_v2_pred = predict_image("./test/", "cat.jpg", 13, "v2")
+    img_2_v1_pred = predict_image("cat.jpg", 13, "v1")
+    img_2_v2_pred = predict_image("cat.jpg", 13, "v2")
 
-    img_3_v1_pred = predict_image("./test/", "landscape.jpg", 13, "v1")
-    img_3_v2_pred = predict_image("./test/", "landscape.jpg", 13, "v2")
+    img_3_v1_pred = predict_image("landscape.jpg", 13, "v1")
+    img_3_v2_pred = predict_image("landscape.jpg", 13, "v2")
+
+    image_list_v1_hist = [img_1, img_1_v1_pred, img_2, img_2_v1_pred, img_3, img_3_v1_pred]
+    image_list_v2_hist = [img_1, img_1_v2_pred, img_2, img_2_v2_pred, img_3, img_3_v2_pred]
 
     image_list_v1 = [img_1_v1_pred, img_2_v1_pred, img_3_v1_pred]
     image_list_v2 = [img_1_v2_pred, img_2_v2_pred, img_3_v2_pred]
@@ -137,51 +169,9 @@ if __name__ == "__main__":
     image_list_v2.insert(2, cv.cvtColor(cv.imread(os.path.join("./test/", "cat.jpg")), cv.COLOR_BGR2RGB))
     image_list_v2.insert(4, cv.cvtColor(cv.imread(os.path.join("./test/", "landscape.jpg")), cv.COLOR_BGR2RGB))
 
-    fig, axes = plt.subplots(nrows=3, ncols=2, sharey=True)
 
-    ax1, ax2 = axes[0]
-    ax3, ax4 = axes[1]
-    ax5, ax6 = axes[2]
-
-    ax1.hist(img_1_v1_pred.ravel(), bins=256)
-    ax2.hist(img_1.ravel(), bins=256)
-    ax3.hist(img_2_v1_pred.ravel(), bins=256)
-    ax4.hist(img_2.ravel(), bins=256)
-    ax5.hist(img_3_v1_pred.ravel(), bins=256)
-    ax6.hist(img_3.ravel(), bins=256)
-
-    ax1.set_title("Histogramm Original")
-    ax2.set_title("Histogramm Vorhersage")
-    ax3.set_title("Histogramm Original")
-    ax4.set_title("Histogramm Vorhersage")
-    ax5.set_title("Histogramm Original")
-    ax6.set_title("Histogramm Vorhersage")
-
-    plt.tight_layout()
-    plt.savefig(os.path.join("./result/histogram/", "histogram_v1.png"))
-
-    fig, axes = plt.subplots(nrows=3, ncols=2, sharey=True)
-
-    ax1, ax2 = axes[0]
-    ax3, ax4 = axes[1]
-    ax5, ax6 = axes[2]
-
-    ax1.hist(img_1_v2_pred.ravel(), bins=256)
-    ax2.hist(img_1.ravel(), bins=256)
-    ax3.hist(img_2_v2_pred.ravel(), bins=256)
-    ax4.hist(img_2.ravel(), bins=256)
-    ax5.hist(img_3_v2_pred.ravel(), bins=256)
-    ax6.hist(img_3.ravel(), bins=256)
-
-    ax1.set_title("Histogramm Original")
-    ax2.set_title("Histogramm Vorhersage")
-    ax3.set_title("Histogramm Original")
-    ax4.set_title("Histogramm Vorhersage")
-    ax5.set_title("Histogramm Original")
-    ax6.set_title("Histogramm Vorhersage")
-
-    plt.tight_layout()
-    plt.savefig(os.path.join("./result/histogram/", "histogram_v2.png"))
+    histogram(image_list_v1_hist, "v1")
+    histogram(image_list_v2_hist, "v2")
 
     image_grid(image_list_v1, "v1")
     image_grid(image_list_v2, "v2")

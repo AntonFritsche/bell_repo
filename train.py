@@ -12,43 +12,6 @@ from tqdm import tqdm
 from torchsummary import summary
 
 
-def test_section_sizes():
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    # exponentielle Abhängigkeit der section_size und der Parameter
-    section_sizes = [7, 9, 11, 13, 15, 17, 19, 21, 23, 25]
-    parameters_v1 = []
-    parameters_v2 = []
-    for size in section_sizes:
-        conv_model_v1 = ConvModel_v1(section_size=size)
-        conv_model_v2 = ConvModel_v2(section_size=size)
-        conv_model_v1 = conv_model_v1.to(device)
-        conv_model_v2 = conv_model_v2.to(device)
-
-        print("# Parameteranzahl: ", sum(p.numel() for p in conv_model_v1.parameters() if p.requires_grad))
-        print("# Parameteranzahl: ", sum(p.numel() for p in conv_model_v2.parameters() if p.requires_grad))
-
-        parameters_v1.append(sum(p.numel() for p in conv_model_v1.parameters() if p.requires_grad))
-        parameters_v2.append(sum(p.numel() for p in conv_model_v2.parameters() if p.requires_grad))
-
-        summary(conv_model_v1, (1, size, size))
-        summary(conv_model_v2, (1, size, size))
-
-    fig, ax = plt.subplots(2, 1)
-
-    ax[0].set_xticks(section_sizes)
-    ax[1].set_xticks(section_sizes)
-
-    ax[0].plot(section_sizes, parameters_v1)
-    ax[1].plot(section_sizes, parameters_v2)
-
-    ax[0].set_xlabel("Sektionsgröße")
-    ax[1].set_xlabel("Sektionsgröße")
-
-    ax[0].set_ylabel("Parameter")
-    ax[1].set_ylabel("Parameter")
-    plt.subplots_adjust(hspace=0.4)
-    plt.show()
-
 def train(
         section_size: int,
         data: str
