@@ -1,4 +1,9 @@
-sektion_size:
+v1:
 5: train_loss (0,0123), val_loss (0,01276)
 11: train_loss (0,0124), val_loss (0,01279)
 15: train_loss (0,0124), val_loss (0,01292)
+
+v2:
+5: train_loss (0,003), val_loss (0,00311)
+13: train_loss (0,268), val_loss (0,00282)
+15: train_loss (0,00265), val_loss (0,00281)

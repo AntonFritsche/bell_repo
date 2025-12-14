@@ -2,8 +2,9 @@ import os
 import torch
 import sys
 import matplotlib.pyplot as plt
+import torch.nn as nn
 
-from model import ConvModel
+from model import ConvModel_v1, ConvModel_v2, ConvModel_v3
 from torch.nn import MSELoss
 from dataset import Section_Dataset
 from torch.utils.data import DataLoader
@@ -15,23 +16,40 @@ def test_section_sizes():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     # exponentielle Abhängigkeit der section_size und der Parameter
     section_sizes = [7, 9, 11, 13, 15, 17, 19, 21, 23, 25]
-    parameters = []
+    parameters_v1 = []
+    parameters_v2 = []
     for size in section_sizes:
-        conv_model = ConvModel(section_size=size)
-        conv_model = conv_model.to(device)
+        conv_model_v1 = ConvModel_v1(section_size=size)
+        conv_model_v2 = ConvModel_v2(section_size=size)
+        conv_model_v1 = conv_model_v1.to(device)
+        conv_model_v2 = conv_model_v2.to(device)
 
-        print("# Parameters: ", sum(p.numel() for p in conv_model.parameters() if p.requires_grad))
-        parameters.append(sum(p.numel() for p in conv_model.parameters() if p.requires_grad))
-        summary(conv_model, (1, size, size))
-    fig, ax = plt.subplots()
-    plt.xticks(section_sizes)
-    ax = fig.gca()
-    ax.plot(section_sizes, parameters)
-    ax.set_xlabel("Sectionsgröße")
-    ax.set_ylabel("Parameter")
+        print("# Parameteranzahl: ", sum(p.numel() for p in conv_model_v1.parameters() if p.requires_grad))
+        print("# Parameteranzahl: ", sum(p.numel() for p in conv_model_v2.parameters() if p.requires_grad))
+
+        parameters_v1.append(sum(p.numel() for p in conv_model_v1.parameters() if p.requires_grad))
+        parameters_v2.append(sum(p.numel() for p in conv_model_v2.parameters() if p.requires_grad))
+
+        summary(conv_model_v1, (1, size, size))
+        summary(conv_model_v2, (1, size, size))
+
+    fig, ax = plt.subplots(2, 1)
+
+    ax[0].set_xticks(section_sizes)
+    ax[1].set_xticks(section_sizes)
+
+    ax[0].plot(section_sizes, parameters_v1)
+    ax[1].plot(section_sizes, parameters_v2)
+
+    ax[0].set_xlabel("Sektionsgröße")
+    ax[1].set_xlabel("Sektionsgröße")
+
+    ax[0].set_ylabel("Parameter")
+    ax[1].set_ylabel("Parameter")
+    plt.subplots_adjust(hspace=0.4)
     plt.show()
 
-def main(
+def train(
         section_size: int,
         data: str
     ):
@@ -41,8 +59,8 @@ def main(
     training_losses = []
     validation_losses = []
 
-    epochs = 10
-    lr = 1e-3
+    epochs = 15
+    lr = 1e-4
     batch_size_train = 256
     batch_size_val = 256
     train_directory = os.path.join(data, f"train_patches_{section_size}")
@@ -52,7 +70,9 @@ def main(
         os.makedirs(result_directory)
 
     # model
-    conv_model = ConvModel(section_size=section_size)
+    # conv_model = ConvModel_v1(section_size=section_size)
+    # conv_model = ConvModel_v2(section_size=section_size)
+    conv_model = ConvModel_v3(section_size=section_size)
     conv_model = conv_model.to(device)
     # test_section_sizes()
 
@@ -68,6 +88,8 @@ def main(
 
     print("# len train_loader: ", len(train_loader))
     print("# len val_loader: ", len(val_loader))
+    best_val_loss = float("inf")
+    best_model_path = "result/model_checkpoint.pth"
 
     for epoch in range(1, epochs + 1):
         # training
@@ -106,7 +128,8 @@ def main(
                 }
             )
 
-        training_losses.append(loss_acc / samples_seen)
+        total_loss = loss_acc / samples_seen
+        training_losses.append(total_loss)
 
         conv_model.eval()
         validation_progress = tqdm(
@@ -127,13 +150,25 @@ def main(
                 val_loss_acc += loss.item() * data.size(0)
                 val_samples_seen += data.size(0)
 
+            total_loss = val_loss_acc / val_samples_seen
             validation_losses.append(val_loss_acc / val_samples_seen)
-        print(f"Epoch {epoch} / {epochs} - Validation Loss: {round(val_loss_acc / val_samples_seen, 5)}")
+            print(f"Epoch {epoch}: Validation Loss: {total_loss:.4f}")
 
-    torch.save(conv_model.state_dict(), f"result/model_sectionsize_{section_size}/conv_model_{section_size}.pth")
+        if total_loss < best_val_loss:
+            best_val_loss = total_loss
+
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': conv_model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': best_val_loss,
+            }, best_model_path)
+
+    checkpoint = torch.load(best_model_path)
+    torch.save(checkpoint, f"result/model_sectionsize_{section_size}/conv_model_{section_size}.pth")
 
     fig_train, ax = plt.subplots()
-    ax.plot([i for i in range(epochs)], training_losses)
+    ax.plot([i for i in range(1, epochs+1)], training_losses)
     # plt.semilogy()
     plt.xticks(range(epochs))
     fig_train.suptitle(f"Training Loss section_size {section_size}")
@@ -143,7 +178,7 @@ def main(
     # plt.show()
 
     fig_val, ax = plt.subplots()
-    ax.plot([i for i in range(epochs)], validation_losses)
+    ax.plot([i for i in range(1, epochs+1)], validation_losses)
     # plt.semilogy()
     plt.xticks(range(epochs))
     fig_val.suptitle(f"Validation Loss section_size {section_size}")
@@ -154,16 +189,17 @@ def main(
 
 if __name__ == '__main__':
     # unterschiedliche section_sizes
-    # minimal section_size = 9
-    main(
-        section_size=9,
-        data=f"D:/projekte/bell_repo/data/"
-    )
-    main(
+    # train(
+    #     section_size=5,
+    #     data="data/"
+    # )
+    # train(
+    #     section_size=50,
+    #     data="data/"
+    # )
+    train(
         section_size=13,
-        data=f"D:/projekte/bell_repo/data/"
+        data="data/"
     )
-    main(
-        section_size=17,
-        data=f"D:/projekte/bell_repo/data/"
-    )
+
+    # test_section_sizes()
