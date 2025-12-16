@@ -25,7 +25,7 @@ class ConvModel_v1(nn.Module):
                     kernel_size=self.filter_size
                 )
             )
-            self.layers.append(nn.ReLU())
+            self.layers.append(nn.LeakyReLU())
 
         self.layers = nn.Sequential(*self.layers)
         self.input_features = 4 * 2**self.num_layers
@@ -66,7 +66,7 @@ class ConvModel_v2(nn.Module):
                     kernel_size=self.filter_size
                 )
             )
-            self.layers.append(nn.ReLU())
+            self.layers.append(nn.LeakyReLU())
             if i % 2 == 1:
                 self.layers.append(nn.BatchNorm2d(out_channels))
 
